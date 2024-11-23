@@ -4,22 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e1ddadb3-197e-44c6-b1e3-34586091af74" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/.idea/Hotel_Management.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/data/room.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/data/user.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/index.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/static/css/style.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/templates/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Hotel_Management/utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="e1ddadb3-197e-44c6-b1e3-34586091af74" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -34,7 +19,10 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -52,8 +40,9 @@
     "Python.index.executor": "Run",
     "Python.models.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/giahu/PycharmProjects/Hotel-Management/hotelappv1"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/giahu/PycharmProjects/Hotel_App/hotelappv1",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -131,8 +120,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.models" />
-        <item itemvalue="Python.__init__" />
         <item itemvalue="Python.index" />
+        <item itemvalue="Python.__init__" />
       </list>
     </recent_temporary>
   </component>

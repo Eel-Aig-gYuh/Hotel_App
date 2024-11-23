@@ -57,6 +57,8 @@ class BaseModel(db.Model):
 
 
 class User(BaseModel):
+    __tablename__ = 'user'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     first_name = Column(NVARCHAR(255), nullable=False)
     last_name = Column(NVARCHAR(255), nullable=False)
@@ -80,18 +82,9 @@ class User(BaseModel):
         pass
 
 
-admin_rules = db.Table('admin_rules',
-                       Column('admin_id', Integer,
-                              ForeignKey('admin.id'), primary_key=True)
-                       )
-
-report_bills = db.Table('report_bills',
-                        Column('report_id', Integer, ForeignKey('Report.id'), primary_key=True),
-                        Column('bill_id', Integer, ForeignKey('Bill.id'), primary_key=True)
-                        )
-
-
 class Rule(BaseModel):
+    __tablename__ = 'rule'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     rule_name = Column(NVARCHAR(255), nullable=False, unique=True)
     rule_value = Column(DECIMAL(18, 2), nullable=True, default=0.00)
@@ -108,6 +101,8 @@ class Rule(BaseModel):
 
 
 class Admin(User):
+    __tablename__ = 'admin'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
 
     # relationships
@@ -126,6 +121,8 @@ class Admin(User):
 
 
 class Employee(User):
+    __tablename__ = 'employee'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
 
     # relationships
@@ -141,6 +138,8 @@ class Employee(User):
 
 
 class Customer(User):
+    __tablename__ = 'customer'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     cmnd = Column(CHAR(12), nullable=False, unique=True)
     address = Column(NVARCHAR(255), nullable=True, default=None)
@@ -156,6 +155,8 @@ class Customer(User):
 
 
 class Account(BaseModel):
+    __tablename__ = 'account'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     user_name = Column(NVARCHAR(250), nullable=False, unique=True)
     password = Column(NVARCHAR(250), nullable=False)
@@ -163,7 +164,7 @@ class Account(BaseModel):
     # foreign key
     # with user_account (many - to - one)
     user_id = Column(Integer,
-                     ForeignKey('User.id', ondelete="CASCADE"), nullable=False)
+                     ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
 
     # relationships
     # with user (many - to - one)
@@ -180,6 +181,8 @@ class Account(BaseModel):
 
 
 class Room(BaseModel):
+    __tablename__ = 'room'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     room_name = Column(NVARCHAR(100), nullable=False, unique=True)
     room_prices = Column(DECIMAL(18, 2), nullable=False, default=0.00)
@@ -211,13 +214,15 @@ class Room(BaseModel):
 
 
 class Bed(BaseModel):
+    __tablename__ = 'bed'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     bed_type = Column(Enum(BedType), default=BedType.DON)
 
     # foreign key
     # with room_bed (many - to - one)
     room_id = Column(Integer,
-                     ForeignKey(Room.id), nullable=False)
+                     ForeignKey('room.id'), nullable=False)
 
     # relationships
     # with room_bed (many - to - one)
@@ -228,6 +233,8 @@ class Bed(BaseModel):
 
 
 class Feature(BaseModel):
+    __tablename__ = 'feature'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     feature_name = Column(NVARCHAR(100), nullable=False)
     amount = Column(Integer, nullable=False, default=1)
@@ -235,7 +242,7 @@ class Feature(BaseModel):
     # foreign key
     # with room_feature (many - to - one)
     room_id = Column(Integer,
-                     ForeignKey('Room.id'), nullable=False)
+                     ForeignKey('room.id'), nullable=False)
 
     # relationships
     # with room_feature (many - to - one)
@@ -246,13 +253,15 @@ class Feature(BaseModel):
 
 
 class Image(db.Model):
+    __tablename__ = 'image'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     url = Column(VARCHAR(255), nullable=True, default=None)
 
     # foreign key
     # with room_image (many - to - one)
     room_id = Column(Integer,
-                     ForeignKey('Room.id'), nullable=False)
+                     ForeignKey('room.id'), nullable=False)
 
     # relationships
     # with room_image (many - to - one)
@@ -263,6 +272,8 @@ class Image(db.Model):
 
 
 class RoomBooking(BaseModel):
+    __tablename__ = 'roomBooking'
+
     # id = Column(Integer, primary_key=True, autoincrement=True)
     check_in_day = Column(DateTime, nullable=False)
     check_out_day = Column(DateTime, nullable=False)
@@ -272,13 +283,13 @@ class RoomBooking(BaseModel):
     # foreign key
     # with customer_room_booking (many - to - one)
     customer_id = Column(Integer,
-                         ForeignKey('Customer.id'), nullable=False)
+                         ForeignKey(Customer.id), nullable=False)
     # with employee_room_booking (many - to - one)
     employee_id = Column(Integer,
-                         ForeignKey('Employee.id'), nullable=False)
+                         ForeignKey(Employee.id), nullable=False)
     # with room_room_booking (many - to - one)
     room_id = Column(Integer,
-                     ForeignKey('Room.id'), nullable=False)
+                     ForeignKey('room.id'), nullable=False)
 
     # relationships
     # with customer_room_booking (many - to - one)
@@ -298,6 +309,8 @@ class RoomBooking(BaseModel):
 
 
 class RoomBookingDetail(db.Model):
+    __tablename__ = 'roomBookingDetail'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     num_normal_guest = Column(Integer, nullable=True, default=0)
     num_foreign_guest = Column(Integer, nullable=True, default=0)
@@ -305,7 +318,7 @@ class RoomBookingDetail(db.Model):
     # foreign key
     # with room_booking_room_booking_detail (one - to - one)
     room_booking_id = Column(Integer,
-                             ForeignKey('RoomBooking.id'), unique=True)
+                             ForeignKey('roomBooking.id'), unique=True)
 
     # relationships
     # with room_booking_room_booking_detail (one - to - one)
@@ -317,15 +330,17 @@ class RoomBookingDetail(db.Model):
 
 
 class RoomManagement(db.Model):
+    __tablename__ = 'roomManagement'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     month = Column(Integer, nullable=False, default=datetime.date.month)
     updated_day = Column(DateTime, onupdate=datetime.datetime.now)
 
     # foreign key
     # with admin (many - to - one)
-    admin_id = Column(ForeignKey("Admin.id"), primary_key=True, nullable=False)
+    admin_id = Column(ForeignKey(Admin.id), primary_key=True, nullable=False)
     # with room (many - to - one)
-    room_id = Column(ForeignKey("Room.id"), primary_key=True, nullable=False)
+    room_id = Column(ForeignKey(Room.id), primary_key=True, nullable=False)
 
     # relationships
     # with admin (many - to - one)
@@ -338,6 +353,8 @@ class RoomManagement(db.Model):
 
 
 class Bill(db.Model):
+    __tablename__ = 'bill'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     total = Column(DECIMAL(18, 2), nullable=False)
     created_day = Column(DateTime, default=datetime.datetime.now)
@@ -347,13 +364,13 @@ class Bill(db.Model):
     # foreign key
     # room_booking_bill (one - to - one)
     room_booking_id = Column(Integer,
-                             ForeignKey('RoomBooking.id'), unique=True)
+                             ForeignKey('roomBooking.id'), unique=True)
 
     # relationships
     # with report_bill (many - to - many)
     reports = relationship("Report",
                            lazy='subquery',
-                           secondary=report_bills,
+                           secondary='report_bills',
                            backref=backref('bills', lazy=True))
 
     # with bill_bill_detail (many - to - one)
@@ -365,6 +382,8 @@ class Bill(db.Model):
 
 
 class BillDetail(db.Model):
+    __tablename__ = 'billDetail'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(NVARCHAR(255), nullable=False, unique=True)
     value = Column(DECIMAL(18, 2), nullable=False, default=0.00)
@@ -372,17 +391,19 @@ class BillDetail(db.Model):
     # foreign key
     # with bill_bill_detail (many - to - one)
     bill_id = Column(Integer,
-                     ForeignKey("Bill.id"), nullable=False)
+                     ForeignKey("bill.id"), nullable=False)
 
     # relationships
     # with bill_bill_detail (many - to - one)
-    bill = relationship('Bill',backref='bill_details')
+    bill = relationship('Bill', backref='bill_details')
 
     def __str__(self):
         return self.key
 
 
 class Report(db.Model):
+    __tablename__ = 'report'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     report_month = Column(Integer, nullable=True, default=datetime.date.month)
     created_day = Column(DateTime, default=datetime.datetime.now)
@@ -393,7 +414,7 @@ class Report(db.Model):
     # foreign key
     # with employee_report (many - to - one)
     employee_id = Column(Integer,
-                         ForeignKey("Employee.id"), nullable=False)
+                         ForeignKey(Employee.id), nullable=False)
 
     # relationships
     # with report_report_detail (one - to - one)
@@ -405,7 +426,7 @@ class Report(db.Model):
     # with report_bill (many - to - many)
     bills = relationship("Bill",
                          lazy='subquery',
-                         secondary=report_bills,
+                         secondary='report_bills',
                          backref=backref('reports', lazy=True))
 
     def __str__(self):
@@ -413,6 +434,8 @@ class Report(db.Model):
 
 
 class ReportDetail(db.Model):
+    __tablename__ = 'reportDetail'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     rent_amount = Column(Integer, nullable=False)
     rent_percent = Column(DECIMAL(18, 2), nullable=False)
@@ -421,7 +444,7 @@ class ReportDetail(db.Model):
     # foreign key
     # with report_report_detail (one - to - one)
     report_id = Column(Integer,
-                       ForeignKey('Report.id'), unique=True)
+                       ForeignKey('report.id'), unique=True)
 
     # relationships
     # with report_report_detail (one - to - one)
@@ -429,6 +452,17 @@ class ReportDetail(db.Model):
 
     def __str__(self):
         return self.id
+
+
+admin_rules = db.Table('admin_rules',
+                       Column('admin_id', Integer,
+                              ForeignKey(Admin.id), primary_key=True)
+                       )
+
+report_bills = db.Table('report_bills',
+                        Column('report_id', Integer, ForeignKey(Report.id), primary_key=True),
+                        Column('bill_id', Integer, ForeignKey(Bill.id), primary_key=True)
+                        )
 
 
 if __name__ == '__main__':
