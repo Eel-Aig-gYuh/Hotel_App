@@ -1,7 +1,9 @@
 asgiref==3.8.1
 backports.zoneinfo==0.2.1
 blinker==1.8.2
+certifi==2024.8.30
 click==8.1.7
+cloudinary==1.41.0
 colorama==0.4.6
 Django==4.2.16
 Flask==3.0.3
@@ -12,9 +14,11 @@ itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==2.1.5
 PyMySQL==1.1.1
+six==1.16.0
 SQLAlchemy==2.0.36
 sqlparse==0.5.2
 typing_extensions==4.12.2
 tzdata==2024.2
+urllib3==2.2.3
 Werkzeug==3.0.6
 zipp==3.20.2

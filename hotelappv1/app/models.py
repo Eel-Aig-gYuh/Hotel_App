@@ -1,9 +1,10 @@
 import datetime
-from sqlalchemy import Column, Integer, NVARCHAR, ForeignKey, DateTime, Boolean, CHAR, Enum, VARCHAR, DECIMAL
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, Integer, NVARCHAR, ForeignKey, DateTime, Boolean, CHAR, Enum, DECIMAL, Time
+from sqlalchemy.orm import relationship, backref, mapped_column
 
 from app import db, app
 from enum import Enum as RoleEnum
+from cloudinary.models import CloudinaryField
 
 
 class UserRole(RoleEnum):
@@ -34,7 +35,9 @@ class RoomStatus(RoleEnum):
 
 class RoomStyle(RoleEnum):
     BINH_THUONG = 1
-    VIP = 2
+    GIA_DINH = 2
+    DOANH_NHAN = 3
+    VIP = 4
 
 
 class PaidMethod(RoleEnum):
@@ -64,10 +67,20 @@ class User(BaseModel):
     last_name = Column(NVARCHAR(255), nullable=False)
     email = Column(NVARCHAR(100), nullable=False, unique=True)
     phone = Column(CHAR(10), nullable=False, unique=True)
-    avatar = Column(VARCHAR(100), nullable=True, default=None)
+    avatar = CloudinaryField(null=False, default_form_class='https://res.cloudinary.com/dnqt29l2e/image/upload'
+                                                            '/v1732453992/user_qcj06n.png')
     user_role = Column(Enum(UserRole), default=UserRole.CUSTOMER)
 
     # relationships
+    # with user_admin (one - to - one)
+    admin = relationship('Admin', backref='user', uselist=False)
+
+    # with user_employee (one - to - one)
+    employee = relationship('Employee', backref='user', uselist=False)
+
+    # with user_customer (one - to - one)
+    customer = relationship('Customer', backref='user', uselist=False)
+
     # with user_account (many - to - one)
     accounts = relationship('Account',
                             backref='user', cascade='all, delete', lazy=True)
@@ -100,12 +113,21 @@ class Rule(BaseModel):
         return self.rule_name
 
 
-class Admin(User):
+class Admin(db.Model):
     __tablename__ = 'admin'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    # bị dính bảng với user
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
+
+    # with user_admin (one - to - one)
+    user_id = mapped_column(ForeignKey('user.id'), unique=True, use_existing_column=True)
 
     # relationships
+    # with user_admin (one - to - one)
+    user = relationship('User', backref='admin')
+
     # with rule (many - to - many)
     rules = relationship('Rule',
                          secondary='admin_rules',
@@ -120,12 +142,23 @@ class Admin(User):
         return self.id
 
 
-class Employee(User):
+#
+class Employee(db.Model):
     __tablename__ = 'employee'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    # bị dính bảng với user
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
+
+    # foreign key
+    # with user_employee (one - to - one)
+    user_id = mapped_column(ForeignKey('user.id'), unique=True, use_existing_column=True)
 
     # relationships
+    # with user_employee (one - to - one)
+    user = relationship('User', backref='employee')
+
     # with RoomBooking (many - to - one)
     e_bookings = relationship("RoomBooking",
                               backref="employee", lazy=True)
@@ -137,15 +170,26 @@ class Employee(User):
         return self.id
 
 
-class Customer(User):
+class Customer(db.Model):
     __tablename__ = 'customer'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    # bị dính bảng với user
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
+
     cmnd = Column(CHAR(12), nullable=False, unique=True)
     address = Column(NVARCHAR(255), nullable=True, default=None)
     customer_type = Column(Enum(CustomerType), default=CustomerType.NOI_DIA)
 
+    # foreign key
+    # with user_customer (one - to - one)
+    user_id = mapped_column(ForeignKey('user.id'), unique=True, use_existing_column=True)
+
     # relationships
+    # with user_customer (one - to - one)
+    user = relationship('User', backref='customer')
+
     # with customer_room_booking (many - to - one)
     c_bookings = relationship("RoomBooking",
                               backref="customer", lazy=True)
@@ -173,11 +217,39 @@ class Account(BaseModel):
     def __str__(self):
         return self.user_name
 
-    def change_password(self):
-        pass
 
-    def reset_password(self):
-        pass
+class Hotel(BaseModel):
+    __tablename__ = 'hotel'
+
+    name = Column(NVARCHAR(255), nullable=False, unique=True)
+    description = Column(NVARCHAR(255), nullable=True, default=None)
+
+    # relationships
+    # with hotel_hotel_location (many - to - one)
+    locations = relationship('HotelLocation',
+                             backref='hotel', cascade='all, delete', lazy=True)
+
+
+class HotelLocation(BaseModel):
+    __tablename__ = 'hotelLocation'
+
+    address = Column(NVARCHAR(255), nullable=False)
+    hot_line = Column(CHAR(10), nullable=False)
+
+    # foreign key
+    # with hotel_hotel_location (many - to - one)
+    hotel_id = Column(Integer,
+                      ForeignKey('hotel.id', ondelete="CASCADE"), nullable=False)
+
+    # relationships
+    # with hotel_hotel_location (many - to - one)
+    hotel = relationship('Hotel', backref='locations')
+    # with hotel_location_room (many - to - one)
+    rooms = relationship('Room',
+                         backref='hotel', cascade='all, delete', lazy=True)
+    # with hotel_location_service (many - to - one)
+    services = relationship('Service',
+                            backref='hotel_location', lazy=True)
 
 
 class Room(BaseModel):
@@ -187,12 +259,26 @@ class Room(BaseModel):
     room_name = Column(NVARCHAR(100), nullable=False, unique=True)
     room_prices = Column(DECIMAL(18, 2), nullable=False, default=0.00)
     notes = Column(NVARCHAR(255), nullable=True, default=None)
+    description = Column(NVARCHAR(255), nullable=True, default=None)
 
     # Enum
     room_status = Column(Enum(RoomStatus), nullable=False, default=RoomStatus.CON_TRONG)
     room_style = Column(Enum(RoomStyle), nullable=False, default=RoomStyle.BINH_THUONG)
 
+    # foreign key
+    # with hotel_location_room (many - to - one)
+    hotel_location_id = Column(Integer,
+                               ForeignKey('hotelLocation.id', ondelete="CASCADE"), nullable=False)
+
     # relationships
+    # with room_service (many - to - many)
+    services = relationship('Service',
+                            secondary='room_services',
+                            lazy='subquery',
+                            backref=backref('rooms', lazy=True))
+
+    # with hotel_location_room (many - to - one)
+    hotel = relationship('HotelLocation', backref='rooms')
     # with admin_room_management (many - to - one)
     room_managements = relationship('RoomManagement',
                                     backref='rooms', lazy=True)
@@ -256,7 +342,7 @@ class Image(db.Model):
     __tablename__ = 'image'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    url = Column(VARCHAR(255), nullable=True, default=None)
+    url = CloudinaryField(null=False)
 
     # foreign key
     # with room_image (many - to - one)
@@ -269,6 +355,35 @@ class Image(db.Model):
 
     def __str__(self):
         return self.url
+
+
+class Service(BaseModel):
+    __tablename__ = 'service'
+
+    service_name = Column(NVARCHAR(100), nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    location = Column(Integer, nullable=False)
+
+    # foreign key
+    # with hotel_location_service (many - to - one)
+    hotel_location_id = Column(Integer,
+                               ForeignKey('hotelLocation.id'), nullable=False)
+    # with bill_detail_service (many - to - one)
+    bill_detail_id = Column(Integer,
+                            ForeignKey('billDetail.id'), nullable=False)
+
+    # relationships
+    # with room_service (many - to - many)
+    rooms = relationship('Room',
+                         secondary='room_services',
+                         lazy='subquery',
+                         backref=backref('services', lazy=True))
+
+    # with hotel_location_service (many - to - one)
+    hotel_location = relationship('HotelLocation', backref='services')
+    # with bill_detail_service (many - to - one)
+    bill_detail = relationship('BillDetail', backref='services')
 
 
 class RoomBooking(BaseModel):
@@ -396,6 +511,9 @@ class BillDetail(db.Model):
     # relationships
     # with bill_bill_detail (many - to - one)
     bill = relationship('Bill', backref='bill_details')
+    # with bill_detail_service (many - to - one)
+    services = relationship('Service',
+                            backref='bill_detail', lazy=True)
 
     def __str__(self):
         return self.key
@@ -455,8 +573,8 @@ class ReportDetail(db.Model):
 
 
 admin_rules = db.Table('admin_rules',
-                       Column('admin_id', Integer,
-                              ForeignKey(Admin.id), primary_key=True)
+                       Column('admin_id', Integer, ForeignKey(Admin.id), primary_key=True),
+                       Column('rule_id', Integer, ForeignKey(Rule.id), primary_key=True)
                        )
 
 report_bills = db.Table('report_bills',
@@ -464,6 +582,10 @@ report_bills = db.Table('report_bills',
                         Column('bill_id', Integer, ForeignKey(Bill.id), primary_key=True)
                         )
 
+room_services = db.Table('room_services',
+                         Column('room_id', Integer, ForeignKey(Room.id), primary_key=True),
+                         Column('service_id', Integer, ForeignKey(Service.id), primary_key=True)
+                         )
 
 if __name__ == '__main__':
     with app.app_context():
