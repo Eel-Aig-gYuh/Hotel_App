@@ -1,31 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home Page</title>
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+{% extends 'layout/base.html' %}
 
-</head>
-<body>
-    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">Home Page</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mynavbar">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="javascript:void(0)">Trang chủ</a>
-      </ul>
-      <form class="d-flex">
-        <input class="form-control me-2" type="text" placeholder="Search">
-        <button class="btn btn-primary" type="button">Search</button>
-      </form>
+<section class="container">
+    <section>
+        <ul class="pagination mt-1">
+            {% for i in range(1, pages + 1) %}
+            <li class="page-item"><a class="page-link" href="/?page={{i-1}}">Previous</a></li>
+            <li class="page-item"><a class="page-link" href="/?page={{i}}">{{i}}</a></li>
+            <li class="page-item"><a class="page-link" href="/?page={{i+1}}">Next</a></li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <div class="row">
+        {%for r in room%}
+        <div class="col-md-3 col-12">
+            <div class="card" style="">
+                <img class="card-img-top" src="{{ p.image}}" alt="Card image">
+                <div class="card-body">
+                    <h4 class="card-title">{{ r.name }}</h4>
+                    <p class="card-text">{{ r.description }}</p>
+                    <a href="#" class="btn btn-primary">See Profile</a>
+                    <button class="btn btn-danger">Đặt hàng</button>
+                </div>
+            </div>
+        </div>
+        {%endfor%}
     </div>
-  </div>
-</nav>
-</body>
-</html>
+</section>

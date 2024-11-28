@@ -1,0 +1,23 @@
+[
+  {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "1234567890",
+    "user_role": "UserRole.ADMIN"
+  },
+  {
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane.smith@example.com",
+    "phone": "0987654321",
+    "user_role": "UserRole.EMPLOYEE"
+  },
+  {
+    "first_name": "Alice",
+    "last_name": "Johnson",
+    "email": "alice.johnson@example.com",
+    "phone": "1122334455",
+    "user_role": "UserRole.CUSTOMER"
+  }
+]

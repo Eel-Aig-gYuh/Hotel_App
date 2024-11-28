@@ -1,10 +1,9 @@
 import datetime
-from sqlalchemy import Column, Integer, NVARCHAR, ForeignKey, DateTime, Boolean, CHAR, Enum, DECIMAL, Time
+from sqlalchemy import Column, Integer, NVARCHAR, ForeignKey, DateTime, Boolean, CHAR, Enum, DECIMAL, Time, String
 from sqlalchemy.orm import relationship, backref, mapped_column
 
 from app import db, app
 from enum import Enum as RoleEnum
-from cloudinary.models import CloudinaryField
 
 
 class UserRole(RoleEnum):
@@ -67,32 +66,22 @@ class User(BaseModel):
     last_name = Column(NVARCHAR(255), nullable=False)
     email = Column(NVARCHAR(100), nullable=False, unique=True)
     phone = Column(CHAR(10), nullable=False, unique=True)
-    avatar = CloudinaryField(null=False, default_form_class='https://res.cloudinary.com/dnqt29l2e/image/upload'
-                                                            '/v1732453992/user_qcj06n.png')
+    avatar = Column(String(100), nullable=True)
     user_role = Column(Enum(UserRole), default=UserRole.CUSTOMER)
 
     # relationships
     # with user_admin (one - to - one)
-    admin = relationship('Admin', backref='user', uselist=False)
+    user_admin = relationship('Admin', backref='admin_user', uselist=False)
 
     # with user_employee (one - to - one)
-    employee = relationship('Employee', backref='user', uselist=False)
+    user_employee = relationship('Employee', backref='employee_user', uselist=False)
 
     # with user_customer (one - to - one)
-    customer = relationship('Customer', backref='user', uselist=False)
+    user_customer = relationship('Customer', backref='customer_user', uselist=False)
 
     # with user_account (many - to - one)
-    accounts = relationship('Account',
-                            backref='user', cascade='all, delete', lazy=True)
-
-    def __str__(self):
-        return self.first_name
-
-    def create_user(self):
-        pass
-
-    def search_room(self):
-        pass
+    user_accounts = relationship('Account',
+                                 backref='account_user', cascade='all, delete', lazy=True)
 
 
 class Rule(BaseModel):
@@ -103,14 +92,11 @@ class Rule(BaseModel):
     rule_value = Column(DECIMAL(18, 2), nullable=True, default=0.00)
 
     # relationships
-    # with admin (many - to - many)
+    # with admin_rule (many - to - many)
     admins = relationship('Admin',
                           secondary='admin_rules',
                           lazy='subquery',
-                          backref=backref('rules', lazy=True))
-
-    def __str__(self):
-        return self.rule_name
+                          backref=backref('rule', lazy=True))
 
 
 class Admin(db.Model):
@@ -122,24 +108,21 @@ class Admin(db.Model):
     # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
 
     # with user_admin (one - to - one)
-    user_id = mapped_column(ForeignKey('user.id'), unique=True, use_existing_column=True)
+    user_id = mapped_column(ForeignKey('user.id'), nullable=False)
 
     # relationships
     # with user_admin (one - to - one)
-    user = relationship('User', backref='admin')
+    # admin_user = relationship('User', backref='user_admin')
 
-    # with rule (many - to - many)
+    # # with admin_rule (many - to - many)
     rules = relationship('Rule',
                          secondary='admin_rules',
                          lazy='subquery',
-                         backref=backref("admins", lazy=True))
+                         backref=backref("admin", lazy=True))
 
-    # with room_management (many - to - one)
+    # with admin_room_management (many - to - one)
     room_managements = relationship('RoomManagement',
-                                    backref='admins', lazy=True)
-
-    def __str__(self):
-        return self.id
+                                    backref='admin', lazy=True)
 
 
 #
@@ -153,21 +136,18 @@ class Employee(db.Model):
 
     # foreign key
     # with user_employee (one - to - one)
-    user_id = mapped_column(ForeignKey('user.id'), unique=True, use_existing_column=True)
+    user_id = mapped_column(ForeignKey('user.id'), nullable=False)
 
     # relationships
     # with user_employee (one - to - one)
-    user = relationship('User', backref='employee')
+    # employee_user = relationship('User', backref='user_employee')
 
-    # with RoomBooking (many - to - one)
+    # with employee_room_booking (many - to - one)
     e_bookings = relationship("RoomBooking",
                               backref="employee", lazy=True)
-    # # with employee_report (many - to - one)
+    # with employee_report (many - to - one)
     reports = relationship("Report",
                            backref="employee", lazy=True)
-
-    def __str__(self):
-        return self.id
 
 
 class Customer(db.Model):
@@ -178,31 +158,28 @@ class Customer(db.Model):
 
     # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
 
-    cmnd = Column(CHAR(12), nullable=False, unique=True)
+    cmnd = Column(CHAR(12), nullable=True, unique=True)
     address = Column(NVARCHAR(255), nullable=True, default=None)
     customer_type = Column(Enum(CustomerType), default=CustomerType.NOI_DIA)
 
     # foreign key
     # with user_customer (one - to - one)
-    user_id = mapped_column(ForeignKey('user.id'), unique=True, use_existing_column=True)
+    user_id = mapped_column(ForeignKey('user.id'), nullable=False)
 
     # relationships
     # with user_customer (one - to - one)
-    user = relationship('User', backref='customer')
+    # customer_user = relationship('User', backref='user_customer')
 
     # with customer_room_booking (many - to - one)
     c_bookings = relationship("RoomBooking",
                               backref="customer", lazy=True)
-
-    def __str__(self):
-        return self.cmnd
 
 
 class Account(BaseModel):
     __tablename__ = 'account'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
-    user_name = Column(NVARCHAR(250), nullable=False, unique=True)
+    username = Column(NVARCHAR(250), nullable=False, unique=True)
     password = Column(NVARCHAR(250), nullable=False)
 
     # foreign key
@@ -212,10 +189,7 @@ class Account(BaseModel):
 
     # relationships
     # with user (many - to - one)
-    user = relationship('User', backref='accounts')
-
-    def __str__(self):
-        return self.user_name
+    # account_user = relationship('User', backref='user_accounts')
 
 
 class Hotel(BaseModel):
@@ -243,7 +217,7 @@ class HotelLocation(BaseModel):
 
     # relationships
     # with hotel_hotel_location (many - to - one)
-    hotel = relationship('Hotel', backref='locations')
+    # hotel = relationship('Hotel', backref='locations')
     # with hotel_location_room (many - to - one)
     rooms = relationship('Room',
                          backref='hotel', cascade='all, delete', lazy=True)
@@ -259,7 +233,6 @@ class Room(BaseModel):
     room_name = Column(NVARCHAR(100), nullable=False, unique=True)
     room_prices = Column(DECIMAL(18, 2), nullable=False, default=0.00)
     notes = Column(NVARCHAR(255), nullable=True, default=None)
-    description = Column(NVARCHAR(255), nullable=True, default=None)
 
     # Enum
     room_status = Column(Enum(RoomStatus), nullable=False, default=RoomStatus.CON_TRONG)
@@ -275,13 +248,13 @@ class Room(BaseModel):
     services = relationship('Service',
                             secondary='room_services',
                             lazy='subquery',
-                            backref=backref('rooms', lazy=True))
+                            backref=backref('room', lazy=True))
 
     # with hotel_location_room (many - to - one)
-    hotel = relationship('HotelLocation', backref='rooms')
+    # hotel = relationship('HotelLocation', backref='rooms')
     # with admin_room_management (many - to - one)
     room_managements = relationship('RoomManagement',
-                                    backref='rooms', lazy=True)
+                                    backref='room', lazy=True)
     # with room_room_booking (many - to - one)
     r_bookings = relationship('RoomBooking',
                               backref='', lazy=True)
@@ -294,9 +267,6 @@ class Room(BaseModel):
     # with room_image (many - to - one)
     images = relationship("Image",
                           backref="room", lazy=True)
-
-    def __str__(self):
-        return self.room_name
 
 
 class Bed(BaseModel):
@@ -312,10 +282,7 @@ class Bed(BaseModel):
 
     # relationships
     # with room_bed (many - to - one)
-    room = relationship('Room', backref='beds')
-
-    def __str__(self):
-        return self.key
+    # room = relationship('Room', backref='beds')
 
 
 class Feature(BaseModel):
@@ -332,17 +299,14 @@ class Feature(BaseModel):
 
     # relationships
     # with room_feature (many - to - one)
-    room = relationship('Room', backref='features')
-
-    def __str__(self):
-        return self.feature_name
+    # room = relationship('Room', backref='features')
 
 
 class Image(db.Model):
     __tablename__ = 'image'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    url = CloudinaryField(null=False)
+    url = Column(String(100), nullable=False)
 
     # foreign key
     # with room_image (many - to - one)
@@ -351,10 +315,7 @@ class Image(db.Model):
 
     # relationships
     # with room_image (many - to - one)
-    room = relationship('Room', backref='images')
-
-    def __str__(self):
-        return self.url
+    # room = relationship('Room', backref='images')
 
 
 class Service(BaseModel):
@@ -378,12 +339,12 @@ class Service(BaseModel):
     rooms = relationship('Room',
                          secondary='room_services',
                          lazy='subquery',
-                         backref=backref('services', lazy=True))
+                         backref=backref('service', lazy=True))
 
     # with hotel_location_service (many - to - one)
-    hotel_location = relationship('HotelLocation', backref='services')
+    # hotel_location = relationship('HotelLocation', backref='services')
     # with bill_detail_service (many - to - one)
-    bill_detail = relationship('BillDetail', backref='services')
+    # bill_detail = relationship('BillDetail', backref='services')
 
 
 class RoomBooking(BaseModel):
@@ -408,19 +369,16 @@ class RoomBooking(BaseModel):
 
     # relationships
     # with customer_room_booking (many - to - one)
-    customer = relationship('Customer', backref='c_bookings')
+    # customer = relationship('Customer', backref='c_bookings')
     # with employee_room_booking (many - to - one)
-    employee = relationship('Employee', backref='e_bookings')
+    # employee = relationship('Employee', backref='e_bookings')
     # with room_room_booking (many - to - one)
-    room = relationship('Room', backref='r_bookings')
+    # room = relationship('Room', backref='r_bookings')
 
     # with room_booking_room_booking_detail (one - to - one)
     detail = relationship('RoomBookingDetail', backref='room_booking', uselist=False)
     # room_booking_bill (one - to - one)
     bill = relationship('Bill', backref='room_booking', uselist=False)
-
-    def __str__(self):
-        return self.id
 
 
 class RoomBookingDetail(db.Model):
@@ -433,15 +391,11 @@ class RoomBookingDetail(db.Model):
     # foreign key
     # with room_booking_room_booking_detail (one - to - one)
     room_booking_id = Column(Integer,
-                             ForeignKey('roomBooking.id'), unique=True)
+                             ForeignKey('roomBooking.id'), nullable=False)
 
     # relationships
     # with room_booking_room_booking_detail (one - to - one)
-    room_booking = relationship('RoomBooking',
-                                backref='detail')
-
-    def __str__(self):
-        return self.id
+    # room_booking = relationship('RoomBooking', backref='detail')
 
 
 class RoomManagement(db.Model):
@@ -459,12 +413,9 @@ class RoomManagement(db.Model):
 
     # relationships
     # with admin (many - to - one)
-    admins = relationship('Admin', backref='room_managements')
+    # admins = relationship('Admin', backref='room_managements')
     # with room (many - to - one)
-    rooms = relationship('Room', backref='room_managements')
-
-    def __str__(self):
-        return self.id
+    # rooms = relationship('Room', backref='room_managements')
 
 
 class Bill(db.Model):
@@ -479,21 +430,21 @@ class Bill(db.Model):
     # foreign key
     # room_booking_bill (one - to - one)
     room_booking_id = Column(Integer,
-                             ForeignKey('roomBooking.id'), unique=True)
+                             ForeignKey('roomBooking.id'), nullable=False)
 
     # relationships
     # with report_bill (many - to - many)
     reports = relationship("Report",
                            lazy='subquery',
                            secondary='report_bills',
-                           backref=backref('bills', lazy=True))
+                           backref=backref('bill', lazy=True))
 
     # with bill_bill_detail (many - to - one)
-    bill_details = relationship('Bill',
-                                backref='', lazy=True)
+    bill_details = relationship('BillDetail',
+                                backref='bill', lazy=True)
 
     # with room_booking_bill (one - to - one)
-    room_booking = relationship('RoomBooking', backref='bill')
+    # room_booking = relationship('RoomBooking', backref='bill')
 
 
 class BillDetail(db.Model):
@@ -510,13 +461,10 @@ class BillDetail(db.Model):
 
     # relationships
     # with bill_bill_detail (many - to - one)
-    bill = relationship('Bill', backref='bill_details')
+    # bill = relationship('Bill', backref='bill_details')
     # with bill_detail_service (many - to - one)
     services = relationship('Service',
                             backref='bill_detail', lazy=True)
-
-    def __str__(self):
-        return self.key
 
 
 class Report(db.Model):
@@ -539,16 +487,13 @@ class Report(db.Model):
     detail = relationship('ReportDetail', backref='report', uselist=False)
 
     # with employee_report (many - to - one)
-    employee = relationship("Employee", backref='reports')
+    # employee = relationship("Employee", backref='reports')
 
     # with report_bill (many - to - many)
     bills = relationship("Bill",
                          lazy='subquery',
                          secondary='report_bills',
-                         backref=backref('reports', lazy=True))
-
-    def __str__(self):
-        return self.report_month
+                         backref=backref('report', lazy=True))
 
 
 class ReportDetail(db.Model):
@@ -562,14 +507,11 @@ class ReportDetail(db.Model):
     # foreign key
     # with report_report_detail (one - to - one)
     report_id = Column(Integer,
-                       ForeignKey('report.id'), unique=True)
+                       ForeignKey('report.id'), nullable=False)
 
     # relationships
     # with report_report_detail (one - to - one)
-    report = relationship('Report', backref='detail')
-
-    def __str__(self):
-        return self.id
+    # report = relationship('Report', backref='detail')
 
 
 admin_rules = db.Table('admin_rules',
@@ -589,4 +531,8 @@ room_services = db.Table('room_services',
 
 if __name__ == '__main__':
     with app.app_context():
+        db.drop_all()
+
         db.create_all()
+
+    pass
