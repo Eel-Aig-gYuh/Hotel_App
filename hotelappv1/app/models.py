@@ -1,9 +1,12 @@
 import datetime
+import hashlib
+
 from sqlalchemy import Column, Integer, NVARCHAR, ForeignKey, DateTime, Boolean, CHAR, Enum, DECIMAL, Time, String
 from sqlalchemy.orm import relationship, backref, mapped_column
 
 from app import db, app
 from enum import Enum as RoleEnum
+from flask_login import UserMixin
 
 
 class UserRole(RoleEnum):
@@ -175,7 +178,7 @@ class Customer(db.Model):
                               backref="customer", lazy=True)
 
 
-class Account(BaseModel):
+class Account(BaseModel, UserMixin):
     __tablename__ = 'account'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
@@ -534,5 +537,11 @@ if __name__ == '__main__':
         db.drop_all()
 
         db.create_all()
+        u = User(id=1, first_name='Huy', last_name='Le',
+                 email='giahuyle1030@gmail.com', phone='0899308758', user_role=UserRole.ADMIN)
+        acc = Account(username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), user_id=1)
 
-    pass
+        db.session.add(u)
+        db.session.add(acc)
+
+        db.session.commit()
