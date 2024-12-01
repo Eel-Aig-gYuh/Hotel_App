@@ -4,9 +4,6 @@ from app import db, app
 import cloudinary.uploader
 
 
-
-
-
 def get_account_by_id(ids):
     return Account.query.get(ids)
 
@@ -74,3 +71,7 @@ def pagination(page=1):
 
 def count_rooms():
     return Room.query.count()
+
+
+def read_hotel():
+    pass

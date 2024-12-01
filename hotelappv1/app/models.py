@@ -100,7 +100,8 @@ class Rule(BaseModel):
                           secondary='admin_rules',
                           lazy='subquery',
                           backref=backref('rule', lazy=True),
-                          overlaps='admins, rule')
+                          overlaps='rule, admin',
+                          viewonly=True)
 
 
 class Admin(db.Model):
@@ -118,11 +119,13 @@ class Admin(db.Model):
     # with user_admin (one - to - one)
     # admin_user = relationship('User', backref='user_admin')
 
-    # # with admin_rule (many - to - many)
+    # with admin_rule (many - to - many)
     rules = relationship('Rule',
                          secondary='admin_rules',
                          lazy='subquery',
-                         backref=backref("admin", lazy=True))
+                         backref=backref("admin", lazy=True),
+                         overlaps='admin, rule',
+                         viewonly=True)
 
     # with admin_room_management (many - to - one)
     room_managements = relationship('RoomManagement',
@@ -258,7 +261,9 @@ class Room(BaseModel):
     services = relationship('Service',
                             secondary='room_services',
                             lazy='subquery',
-                            backref=backref('room', lazy=True))
+                            backref=backref('room', lazy=True),
+                            overlaps='rooms, service',
+                            viewonly=True)
 
     # with hotel_location_room (many - to - one)
     # hotel = relationship('HotelLocation', backref='rooms')
@@ -344,8 +349,8 @@ class Service(BaseModel):
     hotel_location_id = Column(Integer,
                                ForeignKey('hotelLocation.id'), nullable=False)
     # with bill_detail_service (many - to - one)
-    bill_detail_id = Column(Integer,
-                            ForeignKey('billDetail.id'), nullable=False)
+    # bill_detail_id = Column(Integer,
+    #                         ForeignKey('billDetail.id'), nullable=False)
 
     # relationships
     # with room_service (many - to - many)
@@ -353,11 +358,14 @@ class Service(BaseModel):
                          secondary='room_services',
                          lazy='subquery',
                          backref=backref('service', lazy=True),
-                         overlaps='room, services')
+                         overlaps='services, room',
+                         viewonly=True)
 
     # with hotel_location_service (many - to - one)
     # hotel_location = relationship('HotelLocation', backref='services')
     # with bill_detail_service (many - to - one)
+    bill_details = relationship('BillDetail',
+                                backref='service', lazy=True)
     # bill_detail = relationship('BillDetail', backref='services')
 
 
@@ -451,7 +459,9 @@ class Bill(db.Model):
     reports = relationship("Report",
                            lazy='subquery',
                            secondary='report_bills',
-                           backref=backref('bill', lazy=True))
+                           backref=backref('bill', lazy=True),
+                           overlaps='bill, reports',
+                           viewonly=True)
 
     # with bill_bill_detail (many - to - one)
     bill_details = relationship('BillDetail',
@@ -472,13 +482,16 @@ class BillDetail(db.Model):
     # with bill_bill_detail (many - to - one)
     bill_id = Column(Integer,
                      ForeignKey("bill.id"), nullable=False)
+    # with bill_detail_service (many - to - one)
+    service_id = Column(Integer,
+                        ForeignKey('service.id'), nullable=False)
 
     # relationships
     # with bill_bill_detail (many - to - one)
     # bill = relationship('Bill', backref='bill_details')
     # with bill_detail_service (many - to - one)
-    services = relationship('Service',
-                            backref='bill_detail', lazy=True)
+    # services = relationship('Service',
+    #                         backref='bill_detail', lazy=True)
 
 
 class Report(db.Model):
@@ -508,7 +521,8 @@ class Report(db.Model):
                          lazy='subquery',
                          secondary='report_bills',
                          backref=backref('report', lazy=True),
-                         overlaps='bill, reports')
+                         overlaps='reports, bill',
+                         viewonly=True)
 
 
 class ReportDetail(db.Model):
@@ -547,8 +561,8 @@ room_services = db.Table('room_services',
 if __name__ == '__main__':
     with app.app_context():
         db.drop_all()
-
         db.create_all()
+
         u = User(id=1, first_name='Huy', last_name='Le',
                  email='giahuyle1030@gmail.com', phone='0899308758', user_role=UserRole.ADMIN)
         acc = Account(username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), user_id=1)
