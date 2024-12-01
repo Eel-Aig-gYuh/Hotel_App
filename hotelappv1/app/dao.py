@@ -4,6 +4,9 @@ from app import db, app
 import cloudinary.uploader
 
 
+
+
+
 def get_account_by_id(ids):
     return Account.query.get(ids)
 
@@ -64,7 +67,7 @@ def load_room(room_id=None, kw=None, page=1):
 def pagination(page=1):
     query = Room.query.order_by('id')
     page_size = app.config['PAGE_SIZE']
-    start = (page - 1) * page_size
+    start = (int(page) - 1) * page_size
 
     return query.slice(start, start + page_size)
 

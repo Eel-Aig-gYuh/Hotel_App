@@ -99,7 +99,8 @@ class Rule(BaseModel):
     admins = relationship('Admin',
                           secondary='admin_rules',
                           lazy='subquery',
-                          backref=backref('rule', lazy=True))
+                          backref=backref('rule', lazy=True),
+                          overlaps='admins, rule')
 
 
 class Admin(db.Model):
@@ -206,6 +207,9 @@ class Hotel(BaseModel):
     locations = relationship('HotelLocation',
                              backref='hotel', cascade='all, delete', lazy=True)
 
+    def __str__(self):
+        return self.name
+
 
 class HotelLocation(BaseModel):
     __tablename__ = 'hotelLocation'
@@ -227,6 +231,9 @@ class HotelLocation(BaseModel):
     # with hotel_location_service (many - to - one)
     services = relationship('Service',
                             backref='hotel_location', lazy=True)
+
+    def __str__(self):
+        return self.address
 
 
 class Room(BaseModel):
@@ -270,6 +277,9 @@ class Room(BaseModel):
     # with room_image (many - to - one)
     images = relationship("Image",
                           backref="room", lazy=True)
+
+    def __str__(self):
+        return self.room_name
 
 
 class Bed(BaseModel):
@@ -342,7 +352,8 @@ class Service(BaseModel):
     rooms = relationship('Room',
                          secondary='room_services',
                          lazy='subquery',
-                         backref=backref('service', lazy=True))
+                         backref=backref('service', lazy=True),
+                         overlaps='room, services')
 
     # with hotel_location_service (many - to - one)
     # hotel_location = relationship('HotelLocation', backref='services')
@@ -496,7 +507,8 @@ class Report(db.Model):
     bills = relationship("Bill",
                          lazy='subquery',
                          secondary='report_bills',
-                         backref=backref('report', lazy=True))
+                         backref=backref('report', lazy=True),
+                         overlaps='bill, reports')
 
 
 class ReportDetail(db.Model):
