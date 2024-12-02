@@ -1,0 +1,198 @@
+/* Tùy chỉnh thanh cuộn toàn trang */
+::-webkit-scrollbar {
+    width: 10px; /* Độ rộng của thanh cuộn */
+    height: 10px; /* Độ cao của thanh cuộn ngang (nếu cần) */
+}
+
+/* Màu nền track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Màu nền */
+    border-radius: 5px; /* Góc bo tròn */
+}
+
+/* Màu thumb */
+::-webkit-scrollbar-thumb {
+    background: #888; /* Màu chính của thanh kéo */
+    border-radius: 5px; /* Góc bo tròn */
+}
+
+/* Hiệu ứng hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Đổi màu khi hover */
+}
+
+/* Hỗ trợ cho Firefox và các trình duyệt không phải WebKit */
+* {
+    scrollbar-width: thin; /* Thanh cuộn mỏng */
+    scrollbar-color: #888 #f1f1f1; /* Màu thumb và track */
+}
+
+.star{
+    color: red;  /* Thêm màu đỏ cho dấu sao */
+    font-weight: bold;  /* Làm dấu sao đậm nếu muốn */
+}
+
+/* Phong cách chung cho các nút */
+.custom-btn {
+    border-radius: 30px; /* Làm bo góc nút mềm mại hơn */
+    padding: 10px 23px; /* Tăng khoảng cách trong nút để tạo cảm giác thoải mái hơn */
+    font-size: 18px; /* Kích thước chữ phù hợp hơn */
+    font-weight: 600; /* Chữ đậm vừa phải, dễ nhìn */
+    transition: all 0.3s ease; /* Hiệu ứng mượt mà khi hover */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Bóng đổ mềm mại và nhẹ nhàng */
+    text-transform: uppercase; /* Chữ in hoa tạo sự đồng nhất */
+}
+
+/* Nút đăng ký (btn-outline-primary) */
+.btn-outline-primary.custom-btn {
+    color: #007bff; /* Màu chữ chính */
+    border: 2px solid #007bff; /* Độ dày viền */
+    background-color: transparent; /* Nền trong suốt */
+}
+
+.btn-outline-primary.custom-btn:hover {
+    background-color: #fff; /* Màu nền khi hover chuyển thành trắng */
+    color: #007bff; /* Màu chữ khi hover chuyển thành màu chính */
+    border-color: #007bff; /* Viền khi hover giữ màu chính */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* Bóng đổ mạnh hơn khi hover */
+}
+
+/* Nút đăng nhập (btn-primary) */
+.btn-primary.custom-btn {
+    background-color: #007bff; /* Màu nền chính */
+    border: none; /* Loại bỏ viền */
+    color: #fff; /* Màu chữ trắng */
+}
+
+.btn-primary.custom-btn:hover {
+    background-color: #fff; /* Màu nền khi hover chuyển thành trắng */
+    color: #007bff; /* Màu chữ khi hover chuyển thành màu chính */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5); /* Bóng đổ đậm hơn khi hover */
+    transform: translateY(-2px); /* Hiệu ứng nâng nút khi hover */
+}
+
+/* Khoảng cách giữa hai nút */
+.d-flex .me-2 {
+    margin-right: 10px;
+}
+/* Phong cách cho tên khách sạn */
+.hotel-name {
+    font-family: 'Playfair Display', serif; /* Phông chữ sang trọng */
+    font-size: 36px; /* Kích thước lớn để nổi bật */
+    font-weight: bold; /* Chữ đậm */
+    color: #2a64b9; /* Màu vàng ánh kim */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Bóng chữ nhẹ */
+    letter-spacing: 2px; /* Khoảng cách chữ để tạo độ tinh tế */
+    text-transform: uppercase; /* Chữ in hoa */
+    margin-left: 10px; /* Khoảng cách với biểu tượng hoặc phần bên trái */
+    transition: all 0.3s ease; /* Hiệu ứng khi hover */
+}
+
+/* Hiệu ứng khi hover */
+.hotel-name:hover {
+    color: #1e3a8a; /* Màu sáng hơn khi hover */
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4); /* Bóng đổ mạnh hơn */
+    transform: scale(1.05); /* Phóng to nhẹ khi hover */
+    cursor: pointer;/*Bàn tay*/
+}
+/* Thanh điều hướng */
+.navbar-nav {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.nav-item {
+    display: inline-block;
+    padding: 10px 20px;
+    text-align: center;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333; /* Màu sắc văn bản */
+    font-size: 15px; /* Kích thước chữ vừa phải */
+    font-weight: 200; /* Đậm vừa phải */
+    font-family: 'Playfair Display', serif; /* Phông chữ sang trọng */
+    transition: color 0.3s ease, transform 0.3s ease; /* Hiệu ứng khi hover */
+}
+
+.nav-link:hover {
+    color: #0077b6; /* Màu khi hover */
+    transform: scale(1.045); /* Phóng to nhẹ khi hover */
+}
+
+/* Tạo khoảng cách và căn chỉnh đẹp cho các mục */
+.nav-item {
+    padding: 0 12px;
+    margin: 0;
+    text-transform: uppercase; /* In hoa các mục */
+}
+
+.nav-link {
+    display: inline-block;
+    padding: 5px 0;
+    text-transform: uppercase;
+    font-weight: 250; /* Chữ đậm hơn */
+}
+
+/* Hiệu ứng hover nhẹ nhàng */
+.nav-link:hover {
+    color: #1e3a8a;
+}
+
+/* Định dạng navbar container */
+.container {
+    margin-top: 20px;
+    padding: 0;
+}
+
+/* Tùy chỉnh kích thước biểu tượng */
+.bi {
+    font-size: 1.2rem; /* Điều chỉnh kích thước biểu tượng */
+}
+
+/* Khoảng cách giữa biểu tượng và văn bản */
+.bi-telephone, .bi-envelope {
+    margin-right: 5px;
+}
+
+/* Căn giữa các biểu tượng mạng xã hội */
+.bg-light .d-flex a {
+    font-size: 1.5rem; /* Thay đổi kích thước logo */
+    color: #333; /* Màu sắc biểu tượng */
+    transition: color 0.3s ease;
+}
+
+.bg-light .d-flex a:hover {
+    color: #0077b6; /* Màu khi hover */
+}
+
+.footer {
+    background-color: #003366; /* Xanh đậm */
+    color: white; /* Màu chữ trắng */
+}
+
+.footer-name{
+    font-size: 1.6rem;
+}
+
+.footer i, .footer img {
+    color: white; /* Màu trắng cho icon */
+}
+
+.footer img {
+    width: 40px; /* Đảm bảo logo có kích thước đồng đều */
+    height: 40px;
+    margin: 0 10px; /* Khoảng cách giữa các logo */
+}
+
+.black-btn{
+    border-radius: 50px;
+}
+
+.black-btn:hover{
+    background-color: #0056b3;
+
+}
+

@@ -1,0 +1,26 @@
+{%extends 'layout/register.html'%}
+
+{%block register%}
+<!-- Form nhập thông tin Account -->
+<div class="col-md-6">
+    <h3 class="text-center mb-4">Đăng ký: Thông tin tài khoản</h3>
+    <form action="/" method="POST">
+        <div class="mb-3">
+            <label for="username" class="form-label">* Tên truy cập</label>
+            <input type="text" class="form-control" id="username" name="username" placeholder="Tên truy cập" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">* Mật khẩu</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" required>
+        </div>
+        <div class="mb-3">
+            <label for="confirmPassword" class="form-label">* Nhập lại mật khẩu</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                   placeholder="Nhập lại mật khẩu" required>
+        </div>
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Hoàn tất đăng ký</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
