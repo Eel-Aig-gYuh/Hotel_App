@@ -1,0 +1,47 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Phòng nghỉ</h2>
+    <div class="row">
+        <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
+            {% for room in rooms %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ room.room_style }}</h5>
+                        <p class="card-text">{{ room.description }}</p>
+                        <p class="card-text fw-bold">{{ room.prices }}</p>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-square"></i> 50m² </li>
+                            <li><i class="bi bi-bed"></i> 3 </li>
+                            <li><i class="bi bi-people"></i> 5 </li>
+                            <li><i class="bi bi-eye"></i> 3 </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <img src="room1.jpg" class="card-img-top" alt="Deluxe Room">
+                    <div class="card-body">
+                        <h5 class="card-title">Deluxe Room</h5>
+                        <p class="card-text">A luxurious room with a great view.</p>
+                        <p class="card-text fw-bold">$200 per night</p>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-square"></i> 50m²</li>
+                            <li><i class="bi bi-bed"></i> 2</li>
+                            <li><i class="bi bi-people"></i> 4</li>
+                            <li><i class="bi bi-eye"></i> Sea View</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

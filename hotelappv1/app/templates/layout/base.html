@@ -12,18 +12,17 @@
 </head>
 <body>
 
-{% block header %}
-{% include 'layout/header.html' %}
+{% block header%}
+{%include 'layout/header.html'%}
 {% endblock %}
 
 <main class="container">
     {% block content required%}
-
     {% endblock %}
 </main>
 
-{% block footer %}
-{% include 'layout/footer.html' %}
+{% block footer%}
+{%include 'layout/footer.html'%}
 {% endblock %}
 
 </body>

@@ -17,7 +17,9 @@ app.config["PAGE_SIZE"] = 4
 
 db = SQLAlchemy(app=app)
 
-login = LoginManager(app=app)
+login = LoginManager()
+login.init_app(app=app)
+
 
 cloudinary.config(
     cloud_name="dnqt29l2e",

@@ -74,13 +74,13 @@ class User(BaseModel):
 
     # relationships
     # with user_admin (one - to - one)
-    user_admin = relationship('Admin', backref='admin_user', uselist=False)
+    # user_admin = relationship('Admin', backref='admin_user', uselist=False)
 
     # with user_employee (one - to - one)
-    user_employee = relationship('Employee', backref='employee_user', uselist=False)
+    # user_employee = relationship('Employee', backref='employee_user', uselist=False)
 
     # with user_customer (one - to - one)
-    user_customer = relationship('Customer', backref='customer_user', uselist=False)
+    # user_customer = relationship('Customer', backref='customer_user', uselist=False)
 
     # with user_account (many - to - one)
     user_accounts = relationship('Account',
@@ -91,8 +91,8 @@ class Rule(BaseModel):
     __tablename__ = 'rule'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
-    rule_name = Column(NVARCHAR(255), nullable=False, unique=True)
-    rule_value = Column(DECIMAL(18, 2), nullable=True, default=0.00)
+    name = Column(NVARCHAR(255), nullable=False, unique=True)
+    value = Column(DECIMAL(18, 2), nullable=True, default=0.00)
 
     # relationships
     # with admin_rule (many - to - many)
@@ -108,12 +108,13 @@ class Admin(db.Model):
     __tablename__ = 'admin'
 
     # bị dính bảng với user
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer,
+                ForeignKey('user.id'), primary_key=True, nullable=False)
 
     # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
 
     # with user_admin (one - to - one)
-    user_id = mapped_column(ForeignKey('user.id'), nullable=False)
+    # user_id = mapped_column(ForeignKey('user.id'), nullable=False)
 
     # relationships
     # with user_admin (one - to - one)
@@ -137,13 +138,14 @@ class Employee(db.Model):
     __tablename__ = 'employee'
 
     # bị dính bảng với user
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer,
+                ForeignKey('user.id'), primary_key=True, nullable=False)
 
     # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
 
     # foreign key
     # with user_employee (one - to - one)
-    user_id = mapped_column(ForeignKey('user.id'), nullable=False)
+    # user_id = mapped_column(ForeignKey('user.id'), nullable=False)
 
     # relationships
     # with user_employee (one - to - one)
@@ -161,17 +163,18 @@ class Customer(db.Model):
     __tablename__ = 'customer'
 
     # bị dính bảng với user
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer,
+                ForeignKey('user.id'), primary_key=True, nullable=False)
 
     # sửa lại giải pháp chuyển thành quan hệ (one - to - one)
 
     cmnd = Column(CHAR(12), nullable=True, unique=True)
     address = Column(NVARCHAR(255), nullable=True, default=None)
-    customer_type = Column(Enum(CustomerType), default=CustomerType.NOI_DIA)
+    type = Column(Enum(CustomerType), default=CustomerType.NOI_DIA)
 
     # foreign key
     # with user_customer (one - to - one)
-    user_id = mapped_column(ForeignKey('user.id'), nullable=False)
+    # user_id = mapped_column(ForeignKey('user.id'), nullable=False)
 
     # relationships
     # with user_customer (one - to - one)
@@ -243,8 +246,8 @@ class Room(BaseModel):
     __tablename__ = 'room'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
-    room_name = Column(NVARCHAR(100), nullable=False, unique=True)
-    room_prices = Column(DECIMAL(18, 2), nullable=False, default=0.00)
+    name = Column(NVARCHAR(100), nullable=False, unique=True)
+    prices = Column(DECIMAL(18, 2), nullable=False, default=0.00)
     notes = Column(NVARCHAR(255), nullable=True, default=None)
 
     # Enum
@@ -284,14 +287,14 @@ class Room(BaseModel):
                           backref="room", lazy=True)
 
     def __str__(self):
-        return self.room_name
+        return self.name
 
 
 class Bed(BaseModel):
     __tablename__ = 'bed'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
-    bed_type = Column(Enum(BedType), default=BedType.DON)
+    type = Column(Enum(BedType), default=BedType.DON)
 
     # foreign key
     # with room_bed (many - to - one)
@@ -307,7 +310,7 @@ class Feature(BaseModel):
     __tablename__ = 'feature'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
-    feature_name = Column(NVARCHAR(100), nullable=False)
+    name = Column(NVARCHAR(100), nullable=False)
     amount = Column(Integer, nullable=False, default=1)
 
     # foreign key
@@ -339,10 +342,11 @@ class Image(db.Model):
 class Service(BaseModel):
     __tablename__ = 'service'
 
-    service_name = Column(NVARCHAR(100), nullable=False)
+    name = Column(NVARCHAR(100), nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     location = Column(Integer, nullable=False)
+    prices = Column(DECIMAL(18, 2), nullable=False)
 
     # foreign key
     # with hotel_location_service (many - to - one)
@@ -373,6 +377,7 @@ class RoomBooking(BaseModel):
     __tablename__ = 'roomBooking'
 
     # id = Column(Integer, primary_key=True, autoincrement=True)
+    prices = Column(DECIMAL(18, 2), nullable=False)
     check_in_day = Column(DateTime, nullable=False)
     check_out_day = Column(DateTime, nullable=False)
     duration_in_day = Column(DECIMAL(18, 2), nullable=True, default=None)
@@ -475,7 +480,7 @@ class BillDetail(db.Model):
     __tablename__ = 'billDetail'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    key = Column(NVARCHAR(255), nullable=False, unique=True)
+    name = Column(NVARCHAR(255), nullable=False, unique=True)
     value = Column(DECIMAL(18, 2), nullable=False, default=0.00)
 
     # foreign key

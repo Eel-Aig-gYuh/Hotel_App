@@ -1,7 +1,7 @@
 import math
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, session
 from app import dao, login, app
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from models import UserRole
 
 
@@ -16,7 +16,33 @@ def index():
     total = dao.count_rooms()
 
     rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
-    return render_template('index.html', room=rooms, pages=math.ceil(total/page_size))
+
+    return render_template('index.html', room=rooms, pages=math.ceil(total / page_size))
+
+
+@login.user_loader
+def load_account(account_id):
+    return dao.get_account_by_id(int(account_id))
+
+
+# Route cho trang Phòng nghỉ
+@app.route('/rooms')
+def rooms():
+    kw = request.args.get('kw')
+    room_id = request.args.get('id')
+    page = request.args.get('page', 1)
+    page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
+    total = dao.count_rooms()
+
+    rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
+
+    return render_template('layout/rooms.html', rooms=rooms, pages=math.ceil(total / page_size))
+
+
+# Route cho trang Đã đặt
+@app.route('/pay')
+def pay():
+    return render_template('layout/pay.html')
 
 
 @app.route("/logout")
@@ -24,22 +50,25 @@ def logout_process():
     logout_user()
     return redirect('/login')
 
+
 @app.route("/login", methods=['get', 'post'])
 def login_process():
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
 
+
+
         account = dao.auth_account(username=username, password=password)
         if account:
-            login_user(user=account)
+            login_user(account)
             return redirect('/')
 
-    return render_template('login.html')
+    return render_template('layout/login.html')
+
 
 @app.route("/login-admin", methods=['post'])
 def login_admin_process():
-
     username = request.form.get('username')
     password = request.form.get('password')
 
@@ -48,6 +77,7 @@ def login_admin_process():
         login_user(user=account)
 
     return redirect('/admin')
+
 
 @app.route('/register', methods=['get', 'post'])
 def register_process():
@@ -78,9 +108,59 @@ def register_process():
     return render_template('register_account.html', err_msg=err_msg)
 
 
-@login.user_loader
-def load_account(account_id):
-    return dao.get_account_by_id(account_id)
+# trong trang chu
+@app.route('/register_user', methods=['get', 'post'])
+def register_user():
+    err_msg = ''
+    if request.method == 'POST':
+        # Lấy thông tin từ form
+        first_name = request.form.get('firstName')
+        last_name = request.form.get('lastName')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+
+        # Xử lý ảnh đại diện (avatar)
+        avatar = request.files.get('avatar')
+
+        try:
+            # Gọi hàm add_user để thêm thông tin người dùng vào cơ sở dữ liệu
+            dao.add_user(first_name=first_name, last_name=last_name,
+                         email=email, phone=phone, avatar=avatar)
+
+            return redirect('/register_account')  # Chuyển đến trang đăng ký tài khoản sau khi thêm thành công
+        except Exception as e:
+            err_msg = f"Đã có lỗi xảy ra: {e}"
+
+    return render_template('layout/register_user.html', err_msg=err_msg)
+
+
+# Route cho trang Đăng ký tài khoản
+@app.route('/register_account', methods=['get', 'post'])
+def register_account():
+    err_msg = None
+    if request.method.__eq__('POST'):
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
+        user_id = 2
+
+        if password.__eq__(confirm):
+            data = request.form.copy()
+            del data['confirm']
+            print(data)
+            dao.add_account(**data, user_id=user_id)
+
+            return redirect('layout/login.html')
+        else:
+            err_msg = 'Mật khẩu không khớp'
+
+    return render_template('layout/register_account.html', err_msg=err_msg)
+
+
+@app.context_processor
+def common_response():
+    return {
+        'categories': dao.load_room()
+    }
 
 
 if __name__ == '__main__':

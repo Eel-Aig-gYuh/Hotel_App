@@ -2,6 +2,7 @@ import hashlib
 from models import Room, Account, User, UserRole
 from app import db, app
 import cloudinary.uploader
+from flask_login import current_user
 
 
 def get_account_by_id(ids):
@@ -20,17 +21,21 @@ def auth_account(username, password, role=None):
                                    Account.password.__eq__(password))
 
     if role:
-        account = account.filter(User.user_role.__eq__(role))
+        account = account.filter(get_role().__eq__(role))
 
     return account.first()
 
 
 def add_user(first_name, last_name, email, phone, avatar):
-    user = User(first_name=first_name, last_name=last_name, email=email, phone=phone,
-                avatar=avatar, user_role=UserRole.CUSTOMER)
 
+    # Thêm người dùng vào cơ sở dữ liệu
+    user = User(first_name=first_name, last_name=last_name,
+                email=email, phone=phone, avatar=avatar)
+
+    # Upload avatar nếu có
     if avatar:
         res = cloudinary.uploader.upload(avatar)
+        # print(res)
         user.avatar = res.get("secure_url")
 
     db.session.add(user)
@@ -39,7 +44,6 @@ def add_user(first_name, last_name, email, phone, avatar):
 
 def add_account(username, password, user_id):
     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
-
     account = Account(username=username, password=password, user_id=user_id)
 
     db.session.add(account)
@@ -75,3 +79,10 @@ def count_rooms():
 
 def read_hotel():
     pass
+
+
+def get_role():
+    account = db.session.query(Account).filter_by(username=current_user.username).first()
+
+    if account:
+        return account.account_user.user_role

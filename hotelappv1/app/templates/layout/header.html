@@ -1,48 +1,31 @@
-<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">eCommerce Website</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="collapsibleNavbar">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link active" href="/">Trang chủ</a>
-                </li>
-                {% for c in category %}
-                <li class="nav-item">
-                    <a class="nav-link" href="#">{{ c.name }}</a>
-                </li>
-                {% endfor %}
-
-                {% if current_user.is_authenticated %}
-                <li class="nav-iem">
-                    <a class="nav-link text-danger" href="/">
-                        <img src="{{ current_user.avatar }}" width="25" height="25" class="rounded-circle"/> Chào, {{ current_user.username }}
-                    </a>
-                </li>
-                <li class="nav-iem">
-                    <a class="nav-link text-danger" href="/logout">Đăng xuất</a>
-                </li>
-
-                {% else %}
-                <li class="nav-iem">
-                    <a class="nav-link text-danger" href="/login">&#129333; Đăng nhập</a>
-                </li>
-
-                <li class="nav-iem">
-                    <a class="nav-link text-info" href="/register">&#129333 Đăng ký</a>
-                </li>
-                {% endif %}
-
-
-
-
-            </ul>
-            <form method="get" action="/" class="d-flex">
-                <input class="form-control me-2" type="text" placeholder="Tìm sản phẩm..." name="kw"/>
-                <button class="btn btn-primary" type="submit">Tìm</button>
-            </form>
+<nav class="navbar navbar-light bg-light px-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <!-- Tên web bên trái -->
+        <div class="d-flex align-items-center">
+            <span class="ms-2 hotel-name">Dream Hotel</span>
+        </div>
+        <!-- Logo ở giữa -->
+        <div class="d-flex justify-content-center">
+            <a href="#">
+                <img src="https://via.placeholder.com/40" alt="Logo"> <!-- Thay bằng logo -->
+            </a>
+        </div>
+        <!-- Nút đăng ký và đăng nhập bên phải -->
+        <div class="d-flex">
+            <a href="/register_user" class="btn btn-outline-primary me-2 custom-btn">Đăng ký</a>
+            <a href="/login" class="btn btn-primary custom-btn">Đăng nhập</a>
         </div>
     </div>
 </nav>
+
+<!-- Tabs -->
+<div class="container mt-3">
+    <ul class="navbar-nav d-flex justify-content-center flex-row">
+        <li class="nav-item mx-3"><a class="nav-link" href="/">Trang chủ</a></li>
+        <li class="nav-item mx-3"><a class="nav-link" href="#">Khách sạn</a></li>
+        <li class="nav-item mx-3"><a class="nav-link" href="/rooms">Phòng nghỉ</a></li>
+        <li class="nav-item mx-3"><a class="nav-link" href="#">Cơ sở vật chất</a></li>
+        <li class="nav-item mx-3"><a class="nav-link" href="#">Liên hệ</a></li>
+        <li class="nav-item mx-3"><a class="nav-link" href="/pay">Đã đặt</a></li>
+    </ul>
+</div>

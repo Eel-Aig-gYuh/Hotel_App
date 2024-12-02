@@ -1,0 +1,97 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<!-- Room Search -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <form class="row g-3">
+                <div class="col-md-2">
+                    <select class="form-select" aria-label="Chọn loại phòng">
+                        <option selected>Phòng</option>
+                        <option value="1">Standard</option>
+                        <option value="2">VIP</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" placeholder="Ngày đến">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" placeholder="Ngày đi">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Người lớn" min="0">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Trẻ em" min="0">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Kiểm tra phòng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div id="carouselExample" class="carousel slide">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="{{ url_for('static', filename='images/room1.jpg') }}" class="d-block w-100"
+                             alt="Room Image">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{{ url_for('static', filename='images/room2.jpg') }}" class="d-block w-100"
+                             alt="Room Image">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample"
+                        data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExample"
+                        data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h4>Phòng Thường</h4>
+            <p class="text-muted">
+                Cảm giác thân mật riêng tư là niềm cảm hứng khi chúng tôi thiết kế căn phòng này. Mọi chi tiết từ ánh
+                sáng
+                dịu nhẹ đến nội thất tinh tế đều được lựa chọn cẩn thận để mang lại sự thoải mái và cảm giác như ở nhà.
+            </p>
+            <ul class="list-unstyled">
+                <li>Diện tích: 26m²</li>
+                <li>Giường: 1 giường đôi</li>
+                <li>Phù hợp: 2 người lớn</li>
+                <li>Cửa sổ: Có</li>
+            </ul>
+            <div class="mb-3">
+                <label for="checkin" class="form-label">Ngày nhận</label>
+                <input type="date" id="checkin" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="checkout" class="form-label">Ngày trả</label>
+                <input type="date" id="checkout" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="guestType" class="form-label">Loại khách</label>
+                <select id="guestType" class="form-select">
+                    <option value="local">Khách nội địa</option>
+                    <option value="international">Khách quốc tế</option>
+                </select>
+            </div>
+            <p class="fw-bold">Giá: 3.600.000đ</p>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-primary black-btn">WiFi</button>
+                <button class="btn btn-outline-primary black-btn">Dọn phòng</button>
+                <button class="btn btn-outline-primary black-btn">Giặt giũ</button>
+                <button class="btn btn-outline-primary black-btn">Đưa đón</button>
+            </div>
+            <button class="btn btn-primary mt-3 w-100">Đặt phòng</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
