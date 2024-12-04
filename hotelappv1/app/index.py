@@ -2,8 +2,8 @@ import math
 from flask import render_template, request, redirect, session
 from app import dao, login, app
 from flask_login import login_user, logout_user, current_user
-from models import UserRole
-
+from models import UserRole, Room, RoomStyle, RoomStatus, db
+from sqlalchemy.orm import joinedload
 
 @app.route("/")
 def index():
@@ -25,19 +25,40 @@ def load_account(account_id):
     return dao.get_account_by_id(int(account_id))
 
 
-# Route cho trang Phòng nghỉ
-@app.route('/rooms')
-def rooms():
-    kw = request.args.get('kw')
-    room_id = request.args.get('id')
-    page = request.args.get('page', 1)
-    page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
-    total = dao.count_rooms()
+@app.route('/rooms', methods=['GET', 'POST'])
+def search_rooms():
+    # Lấy dữ liệu từ form
+    room_style = request.args.get('room_style')  # Phòng
+    check_in = request.args.get('check_in')      # Ngày đến
+    check_out = request.args.get('check_out')    # Ngày đi
+    adults = request.args.get('adults')          # Người lớn
+    children = request.args.get('children')      # Trẻ em
 
-    rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
+    # Tạo query lọc
+    query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
 
-    return render_template('layout/rooms.html', rooms=rooms, pages=math.ceil(total / page_size))
+    # Lọc trạng thái phòng
+    query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
 
+    # Lọc loại phòng
+    if room_style and room_style != "Phòng":
+        query = query.filter(Room.room_style == RoomStyle[room_style])
+
+    # Thực hiện truy vấn
+    rooms = query.all()
+
+    # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
+    if not rooms:
+        no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
+    else:
+        no_rooms_message = None
+
+    return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
+
+# Route cho trang Chi tiết phòng
+@app.route('/room_detail')
+def room_detail():
+    return render_template('layout/room_detail.html')
 
 # Route cho trang Đã đặt
 @app.route('/pay')
@@ -149,7 +170,7 @@ def register_account():
             print(data)
             dao.add_account(**data, user_id=user_id)
 
-            return redirect('layout/login.html')
+            return redirect('/login')
         else:
             err_msg = 'Mật khẩu không khớp'
 
@@ -162,6 +183,20 @@ def common_response():
         'categories': dao.load_room()
     }
 
+# Route cho trang Khách sạn
+@app.route('/hotel')
+def hotel():
+    return render_template('layout/hotel.html')
+
+# Route cho trang Cơ sở vật chất
+@app.route('/facilities')
+def facilities():
+    return render_template('layout/facilities.html')
+
+# Route cho trang Liên hệ
+@app.route('/contact')
+def contact():
+    return render_template('layout/contact.html')
 
 if __name__ == '__main__':
     from app import admin
