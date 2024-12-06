@@ -56,34 +56,33 @@
             </div>
         </div>
         <div class="col-md-6">
-            <h4>Phòng Thường</h4>
+            <h4>{{ room_name }}</h4>
             <p class="text-muted">
-                Cảm giác thân mật riêng tư là niềm cảm hứng khi chúng tôi thiết kế căn phòng này. Mọi chi tiết từ ánh
-                sáng
-                dịu nhẹ đến nội thất tinh tế đều được lựa chọn cẩn thận để mang lại sự thoải mái và cảm giác như ở nhà.
+                {{ room_note }}
             </p>
             <ul class="list-unstyled">
-                <li>Diện tích: 26m²</li>
-                <li>Giường: 1 giường đôi</li>
-                <li>Phù hợp: 2 người lớn</li>
-                <li>Cửa sổ: Có</li>
+                <li>Loại phòng: {{room_level}}</li>
+                <li>Diện tích: {{area}}</li>
+                <li>Giường: {{bed}}</li>
+                <li>Phù hợp: {{people}}</li>
+                <li>Cửa sổ: {{view}}</li>
             </ul>
             <div class="mb-3">
-                <label for="checkin" class="form-label">Ngày nhận</label>
+                <label for="checkin" class="form-label">Ngày nhận //xử lý sau</label>
                 <input type="date" id="checkin" class="form-control">
             </div>
             <div class="mb-3">
-                <label for="checkout" class="form-label">Ngày trả</label>
+                <label for="checkout" class="form-label">Ngày trả //xử lý sau</label>
                 <input type="date" id="checkout" class="form-control">
             </div>
             <div class="mb-3">
                 <label for="guestType" class="form-label">Loại khách</label>
                 <select id="guestType" class="form-select">
-                    <option value="local">Khách nội địa</option>
-                    <option value="international">Khách quốc tế</option>
+                    <option value="local">Khách nội địa//xử lý sau</option>
+                    <option value="international">Khách quốc tế// xử lý sau</option>
                 </select>
             </div>
-            <p class="fw-bold">Giá: 3.600.000đ</p>
+            <p class="fw-bold">Giá: {{ room_price }}VND</p>
             <div class="d-flex justify-content-between">
                 <button class="btn btn-outline-primary black-btn">WiFi</button>
                 <button class="btn btn-outline-primary black-btn">Dọn phòng</button>

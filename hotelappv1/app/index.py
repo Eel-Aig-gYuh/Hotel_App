@@ -1,4 +1,5 @@
 import math
+import json
 from flask import render_template, request, redirect, session
 from app import dao, login, app
 from flask_login import login_user, logout_user, current_user
@@ -24,8 +25,13 @@ def index():
 def load_account(account_id):
     return dao.get_account_by_id(int(account_id))
 
+@app.route('/rooms')
+def rooms():
+    with open('data/rooms.json', 'r', encoding='utf-8') as file:
+        rooms_data = json.load(file)
+    return render_template('layout/rooms.html', rooms=rooms_data)
 
-@app.route('/rooms', methods=['GET', 'POST'])
+@app.route('/search_rooms', methods=['GET', 'POST'])
 def search_rooms():
     # Lấy dữ liệu từ form
     room_style = request.args.get('room_style')  # Phòng
@@ -55,10 +61,20 @@ def search_rooms():
 
     return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
 
-# Route cho trang Chi tiết phòng
-@app.route('/room_detail')
-def room_detail():
-    return render_template('layout/room_detail.html')
+
+@app.route('/room_detail/<string:room_name>/<string:room_note>/<string:room_level>/<int:room_price>/<string:area>/<string:bed>/<string:people>/<string:view>')
+def room_detail(room_name, room_note, room_level, room_price, area, bed, people, view):
+    # Xử lý dữ liệu và trả về trang chi tiết phòng
+    return render_template('layout/room_detail.html',
+                           room_name=room_name,
+                           room_note=room_note,
+                           room_level=room_level,
+                           room_price=room_price,
+                           area=area,
+                           bed=bed,
+                           people=people,
+                           view=view)
+
 
 # Route cho trang Đã đặt
 @app.route('/pay')
