@@ -1,0 +1,5 @@
+Name,Start Time,End Time,Location,Prices,Id,Active,Created Day,Updated Day,Hotel Location
+Buffet Sáng,06:30:00,10:30:00,1,525000.00,1,True,2024-12-02 14:00:27,2024-12-02 14:02:22,"371 Nguyễn Kiệm, P.3, Quận Gò Vấp"
+Fitness,06:00:00,22:00:00,7,128000.00,2,True,2024-12-02 14:01:34,2024-12-02 14:02:00,"371 Nguyễn Kiệm, P.3, Quận Gò Vấp"
+Phòng xông hơi,06:00:00,22:00:00,7,125000.00,3,True,2024-12-02 14:02:27,2024-12-02 14:03:00,"371 Nguyễn Kiệm, P.3, Quận Gò Vấp"
+Dịch vụ giặt là,06:00:00,22:00:00,1,125000.00,4,True,2024-12-02 14:03:42,2024-12-02 14:05:00,"371 Nguyễn Kiệm, P.3, Quận Gò Vấp"

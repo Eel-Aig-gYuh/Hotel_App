@@ -1,18 +1,57 @@
-{% extends 'layout/base.html' %}
+{%extends 'layout/base.html'%}
+{%block content%}
+<!-- Room Search -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <form class="row g-3" action="/rooms" method="POST" enctype="multipart/form-data">
+                <div class="col-md-2">
+                    <select class="form-select" aria-label="Chọn loại phòng">
+                        <option selected>Phòng</option>
+                        <option value="1">Standard</option>
+                        <option value="2">VIP</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" placeholder="Ngày đến">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" placeholder="Ngày đi">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Người lớn" min="0">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Trẻ em" min="0">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Kiểm tra phòng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-{% block content %}
 <div class="container mt-5">
     <h2 class="mb-4">Phòng nghỉ</h2>
+    {% if no_rooms_message %}
+    <div class="alert alert-warning" role="alert">
+        {{ no_rooms_message }}
+    </div>
+    <div class="no-rooms"></div>
+    {% else %}
     <div class="row">
         <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
             {% for room in rooms %}
             <div class="col-md-6 mb-4">
                 <div class="card h-100">
-                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.title }}">
+                    <img src="{{ room.images[0].url }}" class="card-img-top" alt="{{ room.name }}">
                     <div class="card-body">
-                        <h5 class="card-title">{{ room.room_style }}</h5>
+                        <h5 class="card-title">{{ room.name }}</h5>
                         <p class="card-text">{{ room.description }}</p>
-                        <p class="card-text fw-bold">{{ room.prices }}</p>
+                        <p class="card-text fw-bold">Giá: {{ room.prices }} VND</p>
+                        <p class="card-text">Loại phòng: {{ room.room_style.name }}</p>
+
                         <ul class="list-unstyled">
                             <li><i class="bi bi-square"></i> 50m² </li>
                             <li><i class="bi bi-bed"></i> 3 </li>
@@ -24,24 +63,8 @@
             </div>
             {% endfor %}
         </div>
-        <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <img src="room1.jpg" class="card-img-top" alt="Deluxe Room">
-                    <div class="card-body">
-                        <h5 class="card-title">Deluxe Room</h5>
-                        <p class="card-text">A luxurious room with a great view.</p>
-                        <p class="card-text fw-bold">$200 per night</p>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-square"></i> 50m²</li>
-                            <li><i class="bi bi-bed"></i> 2</li>
-                            <li><i class="bi bi-people"></i> 4</li>
-                            <li><i class="bi bi-eye"></i> Sea View</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+    {% endif %}
 </div>
+
 {% endblock %}

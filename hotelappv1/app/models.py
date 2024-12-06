@@ -2,7 +2,7 @@ import datetime
 import hashlib
 
 from sqlalchemy import Column, Integer, NVARCHAR, ForeignKey, DateTime, Boolean, CHAR, Enum, DECIMAL, Time, String
-from sqlalchemy.orm import relationship, backref, mapped_column
+from sqlalchemy.orm import relationship, backref
 
 from app import db, app
 from enum import Enum as RoleEnum
@@ -61,10 +61,12 @@ class BaseModel(db.Model):
     updated_day = Column(DateTime, onupdate=datetime.datetime.now)
 
 
-class User(BaseModel):
+class User(BaseModel, UserMixin):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(NVARCHAR(250), nullable=False, unique=True)
+    password = Column(NVARCHAR(250), nullable=False)
     first_name = Column(NVARCHAR(255), nullable=False)
     last_name = Column(NVARCHAR(255), nullable=False)
     email = Column(NVARCHAR(100), nullable=False, unique=True)
@@ -83,14 +85,12 @@ class User(BaseModel):
     # user_customer = relationship('Customer', backref='customer_user', uselist=False)
 
     # with user_account (many - to - one)
-    user_accounts = relationship('Account',
-                                 backref='account_user', cascade='all, delete', lazy=True)
 
 
 class Rule(BaseModel):
     __tablename__ = 'rule'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(NVARCHAR(255), nullable=False, unique=True)
     value = Column(DECIMAL(18, 2), nullable=True, default=0.00)
 
@@ -185,26 +185,10 @@ class Customer(db.Model):
                               backref="customer", lazy=True)
 
 
-class Account(BaseModel, UserMixin):
-    __tablename__ = 'account'
-
-    # id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(NVARCHAR(250), nullable=False, unique=True)
-    password = Column(NVARCHAR(250), nullable=False)
-
-    # foreign key
-    # with user_account (many - to - one)
-    user_id = Column(Integer,
-                     ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
-
-    # relationships
-    # with user (many - to - one)
-    # account_user = relationship('User', backref='user_accounts')
-
-
 class Hotel(BaseModel):
     __tablename__ = 'hotel'
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(NVARCHAR(255), nullable=False, unique=True)
     description = Column(NVARCHAR(255), nullable=True, default=None)
 
@@ -220,6 +204,7 @@ class Hotel(BaseModel):
 class HotelLocation(BaseModel):
     __tablename__ = 'hotelLocation'
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
     address = Column(NVARCHAR(255), nullable=False)
     hot_line = Column(CHAR(10), nullable=False)
 
@@ -245,7 +230,7 @@ class HotelLocation(BaseModel):
 class Room(BaseModel):
     __tablename__ = 'room'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(NVARCHAR(100), nullable=False, unique=True)
     prices = Column(DECIMAL(18, 2), nullable=False, default=0.00)
     notes = Column(NVARCHAR(255), nullable=True, default=None)
@@ -293,7 +278,7 @@ class Room(BaseModel):
 class Bed(BaseModel):
     __tablename__ = 'bed'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(Enum(BedType), default=BedType.DON)
 
     # foreign key
@@ -309,7 +294,7 @@ class Bed(BaseModel):
 class Feature(BaseModel):
     __tablename__ = 'feature'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(NVARCHAR(100), nullable=False)
     amount = Column(Integer, nullable=False, default=1)
 
@@ -342,6 +327,7 @@ class Image(db.Model):
 class Service(BaseModel):
     __tablename__ = 'service'
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(NVARCHAR(100), nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
@@ -376,7 +362,7 @@ class Service(BaseModel):
 class RoomBooking(BaseModel):
     __tablename__ = 'roomBooking'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     prices = Column(DECIMAL(18, 2), nullable=False)
     check_in_day = Column(DateTime, nullable=False)
     check_out_day = Column(DateTime, nullable=False)
@@ -568,11 +554,10 @@ if __name__ == '__main__':
         db.drop_all()
         db.create_all()
 
-        u = User(id=1, first_name='Huy', last_name='Le',
+        u = User(id=1, username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                 first_name='Huy', last_name='Le',
                  email='giahuyle1030@gmail.com', phone='0899308758', user_role=UserRole.ADMIN)
-        acc = Account(username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()), user_id=1)
 
         db.session.add(u)
-        db.session.add(acc)
 
         db.session.commit()

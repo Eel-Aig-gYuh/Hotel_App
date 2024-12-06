@@ -1,8 +1,10 @@
 import math
 from flask import render_template, request, redirect, session
-from app import dao, login, app
+from sqlalchemy.orm import joinedload
+
+from app import dao, login, app, db
 from flask_login import login_user, logout_user, current_user
-from models import UserRole
+from models import UserRole, User, Room, RoomStyle, RoomStatus
 
 
 @app.route("/")
@@ -22,21 +24,57 @@ def index():
 
 @login.user_loader
 def load_account(account_id):
-    return dao.get_account_by_id(int(account_id))
+    return dao.get_user_by_id(int(account_id))
 
 
 # Route cho trang Phòng nghỉ
-@app.route('/rooms')
-def rooms():
-    kw = request.args.get('kw')
-    room_id = request.args.get('id')
-    page = request.args.get('page', 1)
-    page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
-    total = dao.count_rooms()
+@app.route('/rooms', methods=['GET', 'POST'])
+def search_rooms():
+    # Lấy dữ liệu từ form
+    room_style = request.args.get('room_style')  # Phòng
+    check_in = request.args.get('check_in')      # Ngày đến
+    check_out = request.args.get('check_out')    # Ngày đi
+    adults = request.args.get('adults')          # Người lớn
+    children = request.args.get('children')      # Trẻ em
 
-    rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
+    # Tạo query lọc
+    query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
 
-    return render_template('layout/rooms.html', rooms=rooms, pages=math.ceil(total / page_size))
+    # Lọc trạng thái phòng
+    query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
+
+    # Lọc loại phòng
+    if room_style and room_style != "Phòng":
+        query = query.filter(Room.room_style == RoomStyle[room_style])
+
+    # Thực hiện truy vấn
+    rooms = query.all()
+
+    # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
+    if not rooms:
+        no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
+    else:
+        no_rooms_message = None
+
+    return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
+
+
+# Route cho trang Chi tiết phòng
+@app.route('/room_detail')
+def room_detail():
+    return render_template('layout/room_detail.html')
+
+# @app.route('/rooms')
+# def rooms():
+#     kw = request.args.get('kw')
+#     room_id = request.args.get('id')
+#     page = request.args.get('page', 1)
+#     page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
+#     total = dao.count_rooms()
+#
+#     rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
+#
+#     return render_template('layout/rooms.html', rooms=rooms, pages=math.ceil(total / page_size))
 
 
 # Route cho trang Đã đặt
@@ -57,9 +95,7 @@ def login_process():
         username = request.form.get('username')
         password = request.form.get('password')
 
-
-
-        account = dao.auth_account(username=username, password=password)
+        account = dao.auth_user(username=username, password=password)
         if account:
             login_user(account)
             return redirect('/')
@@ -72,40 +108,12 @@ def login_admin_process():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    account = dao.auth_account(username=username, password=password, role=UserRole.ADMIN)
+    account = dao.auth_user(username=username, password=password, role=UserRole.ADMIN)
+
     if account:
-        login_user(user=account)
+        login_user(account)
 
     return redirect('/admin')
-
-
-@app.route('/register', methods=['get', 'post'])
-def register_process():
-    err_msg = None
-    if request.method.__eq__('POST'):
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-
-        avatar = request.files.get('avatar')
-        dao.add_user(first_name=first_name, last_name=last_name, email=email, phone=phone, avatar=avatar)
-
-        confirm = request.form.get('confirm')
-        password = request.form.get('password')
-
-        if password.__eq__(confirm):
-            data = request.form.copy()
-            del data['confirm']
-
-            dao.add_account(**data)
-
-            # redirect: điều hướng qua trang khác.
-            return redirect('/login')
-        else:
-            err_msg = 'Mật khẩu KHÔNG trùng khớp!'
-
-    return render_template('register_account.html', err_msg=err_msg)
 
 
 # trong trang chu
@@ -120,14 +128,20 @@ def register_user():
         phone = request.form.get('phone')
 
         # Xử lý ảnh đại diện (avatar)
-        avatar = request.files.get('avatar')
-
+        # avatar = request.files.get('avatar')
+        avatar = request.form.get('avatar')
+        
         try:
-            # Gọi hàm add_user để thêm thông tin người dùng vào cơ sở dữ liệu
-            dao.add_user(first_name=first_name, last_name=last_name,
-                         email=email, phone=phone, avatar=avatar)
+            session['user_data'] = {
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'phone': phone,
+                'avatar': avatar
+            }
 
             return redirect('/register_account')  # Chuyển đến trang đăng ký tài khoản sau khi thêm thành công
+            
         except Exception as e:
             err_msg = f"Đã có lỗi xảy ra: {e}"
 
@@ -138,22 +152,45 @@ def register_user():
 @app.route('/register_account', methods=['get', 'post'])
 def register_account():
     err_msg = None
+
+    # lấy dữ liệu được chuyển từ trang register_user.
+    user_data = session.get('user_data')
+
+    if not user_data:
+        return redirect('/register_user')
+
     if request.method.__eq__('POST'):
+        print(user_data)
         password = request.form.get('password')
         confirm = request.form.get('confirm')
-        user_id = 2
 
         if password.__eq__(confirm):
             data = request.form.copy()
             del data['confirm']
             print(data)
-            dao.add_account(**data, user_id=user_id)
+            dao.add_user(**user_data, **data)
 
-            return redirect('layout/login.html')
+            return redirect('login')
         else:
             err_msg = 'Mật khẩu không khớp'
 
     return render_template('layout/register_account.html', err_msg=err_msg)
+
+
+# Route cho trang Khách sạn
+@app.route('/hotel')
+def hotel():
+    return render_template('layout/hotel.html')
+
+# Route cho trang Cơ sở vật chất
+@app.route('/facilities')
+def facilities():
+    return render_template('layout/facilities.html')
+
+# Route cho trang Liên hệ
+@app.route('/contact')
+def contact():
+    return render_template('layout/contact.html')
 
 
 @app.context_processor

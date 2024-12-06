@@ -1,35 +1,34 @@
 import hashlib
-from models import Room, Account, User, UserRole
+from models import Room, User, UserRole
 from app import db, app
 import cloudinary.uploader
 from flask_login import current_user
-
-
-def get_account_by_id(ids):
-    return Account.query.get(ids)
 
 
 def get_user_by_id(ids):
     return User.query.get(ids)
 
 
-def auth_account(username, password, role=None):
+def auth_user(username, password, role=None):
     # băm mật khẩu
     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
 
-    account = Account.query.filter(Account.username.__eq__(username),
-                                   Account.password.__eq__(password))
+    account = User.query.filter(User.username.__eq__(username),
+                                User.password.__eq__(password))
 
     if role:
-        account = account.filter(get_role().__eq__(role))
+        account = account.filter(User.user_role.__eq__(role))
 
     return account.first()
 
 
-def add_user(first_name, last_name, email, phone, avatar):
+def add_user(username, password, first_name, last_name, email, phone, avatar):
+
+    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
 
     # Thêm người dùng vào cơ sở dữ liệu
-    user = User(first_name=first_name, last_name=last_name,
+    user = User(username=username, password=password,
+                first_name=first_name, last_name=last_name,
                 email=email, phone=phone, avatar=avatar)
 
     # Upload avatar nếu có
@@ -39,14 +38,6 @@ def add_user(first_name, last_name, email, phone, avatar):
         user.avatar = res.get("secure_url")
 
     db.session.add(user)
-    db.session.commit()
-
-
-def add_account(username, password, user_id):
-    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
-    account = Account(username=username, password=password, user_id=user_id)
-
-    db.session.add(account)
     db.session.commit()
 
 
@@ -76,13 +67,9 @@ def pagination(page=1):
 def count_rooms():
     return Room.query.count()
 
+def count_users():
+    return User.query.count()
+
 
 def read_hotel():
     pass
-
-
-def get_role():
-    account = db.session.query(Account).filter_by(username=current_user.username).first()
-
-    if account:
-        return account.account_user.user_role

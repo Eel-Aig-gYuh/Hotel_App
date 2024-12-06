@@ -2,7 +2,7 @@
 from app import db, app, dao
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
-from models import User, UserRole, Account, Room, Hotel, HotelLocation, Bed, Service, Feature, Rule
+from models import User, UserRole, Room, Hotel, HotelLocation, Bed, Service, Feature, Rule
 from flask_login import current_user, logout_user
 from flask import redirect
 
@@ -16,7 +16,7 @@ class Authenticated(ModelView):
 
     def is_accessible(self):
         return (current_user.is_authenticated
-                and dao.get_role().__eq__(UserRole.ADMIN))
+                and (current_user.user_role.__eq__(UserRole.ADMIN)))
 
 
 class MyView(BaseView):
