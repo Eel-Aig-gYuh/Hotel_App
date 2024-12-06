@@ -4,8 +4,13 @@ from sqlalchemy.orm import joinedload
 
 from app import dao, login, app, db
 from flask_login import login_user, logout_user, current_user
+<<<<<<< HEAD
 from models import UserRole, User, Room, RoomStyle, RoomStatus
 
+=======
+from models import UserRole, Room, RoomStyle, RoomStatus, db
+from sqlalchemy.orm import joinedload
+>>>>>>> 96a90911b1453794c4d7598c76052075917d2405
 
 @app.route("/")
 def index():
@@ -27,7 +32,10 @@ def load_account(account_id):
     return dao.get_user_by_id(int(account_id))
 
 
+<<<<<<< HEAD
 # Route cho trang Phòng nghỉ
+=======
+>>>>>>> 96a90911b1453794c4d7598c76052075917d2405
 @app.route('/rooms', methods=['GET', 'POST'])
 def search_rooms():
     # Lấy dữ liệu từ form
@@ -42,6 +50,7 @@ def search_rooms():
 
     # Lọc trạng thái phòng
     query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
+<<<<<<< HEAD
 
     # Lọc loại phòng
     if room_style and room_style != "Phòng":
@@ -75,7 +84,28 @@ def room_detail():
 #     rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
 #
 #     return render_template('layout/rooms.html', rooms=rooms, pages=math.ceil(total / page_size))
+=======
+>>>>>>> 96a90911b1453794c4d7598c76052075917d2405
 
+    # Lọc loại phòng
+    if room_style and room_style != "Phòng":
+        query = query.filter(Room.room_style == RoomStyle[room_style])
+
+    # Thực hiện truy vấn
+    rooms = query.all()
+
+    # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
+    if not rooms:
+        no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
+    else:
+        no_rooms_message = None
+
+    return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
+
+# Route cho trang Chi tiết phòng
+@app.route('/room_detail')
+def room_detail():
+    return render_template('layout/room_detail.html')
 
 # Route cho trang Đã đặt
 @app.route('/pay')
@@ -170,7 +200,11 @@ def register_account():
             print(data)
             dao.add_user(**user_data, **data)
 
+<<<<<<< HEAD
             return redirect('login')
+=======
+            return redirect('/login')
+>>>>>>> 96a90911b1453794c4d7598c76052075917d2405
         else:
             err_msg = 'Mật khẩu không khớp'
 
@@ -199,6 +233,20 @@ def common_response():
         'categories': dao.load_room()
     }
 
+# Route cho trang Khách sạn
+@app.route('/hotel')
+def hotel():
+    return render_template('layout/hotel.html')
+
+# Route cho trang Cơ sở vật chất
+@app.route('/facilities')
+def facilities():
+    return render_template('layout/facilities.html')
+
+# Route cho trang Liên hệ
+@app.route('/contact')
+def contact():
+    return render_template('layout/contact.html')
 
 if __name__ == '__main__':
     from app import admin
