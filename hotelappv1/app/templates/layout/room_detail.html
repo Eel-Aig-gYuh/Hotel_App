@@ -82,14 +82,16 @@
                     <option value="international">Khách quốc tế// xử lý sau</option>
                 </select>
             </div>
-            <p class="fw-bold">Giá: {{ room_price }}VND</p>
+            <p class="fw-bold">Giá: {{ "{:,.0f}".format(room_price).replace(',', '.') }} VND</p>
             <div class="d-flex justify-content-between">
                 <button class="btn btn-outline-primary black-btn">WiFi</button>
                 <button class="btn btn-outline-primary black-btn">Dọn phòng</button>
                 <button class="btn btn-outline-primary black-btn">Giặt giũ</button>
                 <button class="btn btn-outline-primary black-btn">Đưa đón</button>
             </div>
-            <button class="btn btn-primary mt-3 w-100">Đặt phòng</button>
+            <a href="{{url_for('book_room', room_name=room_name)}}" class="w-100">
+                <button class="btn btn-primary mt-3 w-100">Đặt phòng</button>
+            </a>
         </div>
     </div>
 </div>

@@ -1,6 +1,7 @@
 import math
 import json
-from flask import render_template, request, redirect, session
+import os
+from flask import render_template, request, redirect, session, url_for, jsonify
 from app import dao, login, app
 from flask_login import login_user, logout_user, current_user
 from models import UserRole, Room, RoomStyle, RoomStatus, db
@@ -75,12 +76,92 @@ def room_detail(room_name, room_note, room_level, room_price, area, bed, people,
                            people=people,
                            view=view)
 
+# Route xử lý đặt phòng
+@app.route('/book_room/<string:room_name>')
+def book_room(room_name):
+    # Đọc danh sách phòng từ rooms.json
+    with open('data/rooms.json', 'r', encoding='utf-8') as file:
+        rooms_data = json.load(file)
+
+    # Tìm phòng được đặt
+    room_to_book = None
+    for room in rooms_data:
+        if room['name'] == room_name:
+            room_to_book = room
+            break
+
+    if room_to_book:
+        # Ghi vào booking_history.json
+        try:
+            with open('data/booking_history.json', 'r', encoding='utf-8') as history_file:
+                booking_history = json.load(history_file)
+        except FileNotFoundError:
+            booking_history = []
+
+        booking_history.append(room_to_book)
+
+        with open('data/booking_history.json', 'w', encoding='utf-8') as history_file:
+            json.dump(booking_history, history_file, ensure_ascii=False, indent=4)
+
+        # Xóa phòng khỏi rooms.json
+        rooms_data = [room for room in rooms_data if room['name'] != room_name]
+
+        with open('data/rooms.json', 'w', encoding='utf-8') as file:
+            json.dump(rooms_data, file, ensure_ascii=False, indent=4)
+
+        return redirect(url_for('rooms'))
+    else:
+        return "Phòng không tồn tại!", 404
+
+
 
 # Route cho trang Đã đặt
 @app.route('/pay')
 def pay():
-    return render_template('layout/pay.html')
+    with open('data/booking_history.json', 'r', encoding='utf-8') as file:
+        book_rooms_data = json.load(file)
+    return render_template('layout/pay.html', booked_rooms=book_rooms_data)
 
+# Đọc dữ liệu từ file JSON
+def read_json_file(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    else:
+        return []
+
+# Ghi dữ liệu vào file JSON
+def write_json_file(file_path, data):
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
+
+# API chuyển phòng từ booking_history.json sang rooms.json
+@app.route('/api/move-rooms', methods=['POST'])
+def move_rooms():
+    try:
+        # Nhận dữ liệu phòng từ frontend
+        rooms_to_move = request.json.get('rooms', [])
+
+        # Đọc dữ liệu hiện tại của các file JSON
+        booking_history = read_json_file('data/booking_history.json')
+        rooms = read_json_file('data/rooms.json')
+
+        # Xóa các phòng đã chọn khỏi booking_history.json
+        updated_booking_history = [
+            room for room in booking_history if room['name'] not in [r['name'] for r in rooms_to_move]
+        ]
+
+        # Thêm các phòng vào rooms.json
+        rooms.extend(rooms_to_move)
+
+        # Ghi lại dữ liệu vào các file JSON
+        write_json_file('data/booking_history.json', updated_booking_history)
+        write_json_file('data/rooms.json', rooms)
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'success': False, 'message': 'Có lỗi xảy ra khi xử lý dữ liệu'}), 500
 
 @app.route("/logout")
 def logout_process():

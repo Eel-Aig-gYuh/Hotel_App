@@ -1,119 +1,206 @@
 {% extends 'layout/base.html' %}
 {% block content %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Checkbox tiêu đề cho danh sách phòng đã đặt
-        const selectAllBookedRooms = document.getElementById('selectAllBookedRooms');
-        const bookedRoomCheckboxes = document.querySelectorAll('#bookedRoomsTable tbody tr td input[type="checkbox"]');
+document.addEventListener('DOMContentLoaded', function() {
+    // Các checkbox của danh sách phòng đã đặt
+    const selectAllBookedRooms = document.getElementById('selectAllBookedRooms');
+    const bookedRoomCheckboxes = document.querySelectorAll('#bookedRoomsTable tbody tr td input[type="checkbox"]');
+    const deleteButton = document.querySelector('.btn-delete'); // Nút xóa
 
-        // Checkbox tiêu đề cho lịch sử thanh toán
-        const selectAllPaymentHistory = document.getElementById('selectAllPaymentHistory');
-        const paymentHistoryCheckboxes = document.querySelectorAll('#paymentHistoryTable tbody tr td input[type="checkbox"]');
+    // Các checkbox của lịch sử thanh toán
+    const selectAllPaymentHistory = document.getElementById('selectAllPaymentHistory');
+    const paymentHistoryCheckboxes = document.querySelectorAll('#paymentHistoryTable tbody tr td input[type="checkbox"]');
 
-        // Hàm để chọn hoặc bỏ chọn tất cả checkbox
-        function toggleCheckboxes(checkboxes, isChecked) {
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
-            });
-        }
+    // Hiển thị tổng tiền
+    const totalAmountDisplay = document.getElementById('totalAmount');
 
-        // Sự kiện cho checkbox tiêu đề danh sách phòng đã đặt
-        selectAllBookedRooms.addEventListener('change', function() {
-            toggleCheckboxes(bookedRoomCheckboxes, this.checked);
+    // Hàm để chọn hoặc bỏ chọn tất cả checkbox
+    function toggleCheckboxes(checkboxes, isChecked) {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
         });
+        calculateTotal(); // Cập nhật tổng tiền sau khi thay đổi checkbox
+    }
 
-        // Sự kiện cho checkbox tiêu đề lịch sử thanh toán
-        selectAllPaymentHistory.addEventListener('change', function() {
-            toggleCheckboxes(paymentHistoryCheckboxes, this.checked);
+    // Hàm tính tổng tiền
+    function calculateTotal() {
+        let total = 0;
+        bookedRoomCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const price = parseInt(row.dataset.price || '0', 10);
+                total += price;
+            }
+        });
+        totalAmountDisplay.textContent = total.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+    }
+
+    // Sự kiện cho checkbox tiêu đề "Tích tất cả" của danh sách phòng đã đặt
+    selectAllBookedRooms.addEventListener('change', function() {
+        toggleCheckboxes(bookedRoomCheckboxes, this.checked);
+    });
+
+    // Sự kiện cho checkbox tiêu đề "Tích tất cả" của lịch sử thanh toán
+    selectAllPaymentHistory.addEventListener('change', function() {
+        toggleCheckboxes(paymentHistoryCheckboxes, this.checked);
+    });
+
+    // Gán sự kiện cho mỗi checkbox trong danh sách phòng đã đặt
+    bookedRoomCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Nếu bỏ chọn một phòng thì bỏ chọn "Tích tất cả"
+            if (!this.checked) {
+                selectAllBookedRooms.checked = false;
+            }
+            // Cập nhật tổng tiền
+            calculateTotal();
         });
     });
+
+    // Gán sự kiện cho mỗi checkbox trong lịch sử thanh toán (thực hiện tính tổng tiền khi tích tất cả)
+    paymentHistoryCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Nếu bỏ chọn một phòng thì bỏ chọn "Tích tất cả"
+            if (!this.checked) {
+                selectAllPaymentHistory.checked = false;
+            }
+            // Cập nhật tổng tiền
+            calculateTotal();
+        });
+    });
+
+    // Tính tổng tiền ngay khi trang tải lần đầu (nếu cần)
+    calculateTotal();
+
+    // Xử lý sự kiện xóa khi người dùng nhấn vào nút "Xóa"
+    deleteButton.addEventListener('click', function() {
+        const selectedRooms = [];
+
+        // Lấy thông tin phòng đã chọn
+        bookedRoomCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const roomData = {
+                    name: row.cells[1].textContent, // Tên phòng
+                    note: row.cells[2].textContent, // Ghi chú phòng
+                    level: row.cells[3].textContent, // Loại phòng
+                    price: parseInt(row.dataset.price, 10), // Giá phòng
+                    area: row.cells[4].textContent, // Diện tích
+                    bed: row.cells[5].textContent, // Giường
+                    people: row.cells[6].textContent, // Số người
+                    view: row.cells[7].textContent, // View phòng
+                    image: row.cells[8].textContent // Ảnh phòng (nếu có)
+                };
+                selectedRooms.push(roomData);
+            }
+        });
+
+        if (selectedRooms.length > 0) {
+            // Gọi API để chuyển phòng sang rooms.json và xóa phòng khỏi booking_history.json
+            moveRoomsToAvailable(selectedRooms);
+        }
+    });
+
+    // Hàm để chuyển phòng sang danh sách phòng trống (rooms.json)
+    function moveRoomsToAvailable(rooms) {
+        fetch('/api/move-rooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rooms: rooms })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Phòng đã được chuyển thành phòng trống.");
+                // Cập nhật lại UI sau khi xóa
+                window.location.reload(); // Tải lại trang để cập nhật danh sách
+            } else {
+                alert("Đã có lỗi xảy ra, vui lòng thử lại.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Đã có lỗi xảy ra, vui lòng thử lại.");
+        });
+    }
+});
 </script>
 <div class="container mt-5">
     <!-- Danh sách phòng đã đặt -->
     <h4>Danh sách phòng đã đặt</h4>
     <table class="table table-striped" id="bookedRoomsTable">
         <thead>
-            <tr>
-                <th scope="col"><input type="checkbox" id="selectAllBookedRooms"></th>
-                <th scope="col">Số phòng</th>
-                <th scope="col">Loại phòng</th>
-                <th scope="col">Ngày nhận</th>
-                <th scope="col">Ngày trả</th>
-                <th scope="col">Trạng thái</th>
-                <th scope="col">Phòng trống</th>
-            </tr>
+        <tr>
+            <th scope="col"><input type="checkbox" id="selectAllBookedRooms"></th>
+            <th scope="col">Số phòng</th>
+            <th scope="col">Loại phòng</th>
+            <th scope="col">Ngày nhận</th>
+            <th scope="col">Ngày trả</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Phòng trống</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td>102</td>
-                <td>Thường</td>
-                <td>03/12/2024</td>
-                <td>06/12/2024</td>
-                <td>Còn trống</td>
-                <td>2</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td>102</td>
-                <td>Thường</td>
-                <td>03/12/2024</td>
-                <td>06/12/2024</td>
-                <td>Còn trống</td>
-                <td>2</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td>102</td>
-                <td>Thường</td>
-                <td>03/12/2024</td>
-                <td>06/12/2024</td>
-                <td>Còn trống</td>
-                <td>2</td>
-            </tr>
+        {% set sum = 0 %}
+        {% for room in booked_rooms %}
+        <tr data-price="{{ room.price }}">
+            <td><input type="checkbox"></td>
+            <td>xử lý bằng csdl</td>
+            <td>{{room.level}}</td>
+            <td>xử lý bằng csdl</td>
+            <td>xử lý bằng csdl</td>
+            <td>Còn trống</td>
+            <td>xử lý bằng csdl</td>
+        </tr>
+
+        {% endfor %}
         </tbody>
     </table>
-    <p class="fw-bold">Số tiền cần thanh toán: 7.200.000đ</p>
+
     <div class="d-flex justify-content-end">
-        <button class="btn btn-outline-danger">Xóa</button>
+        <button class="btn btn-outline-danger btn-delete">Xóa</button>
         <button class="btn btn-outline-primary mx-2">Thêm</button>
         <button class="btn btn-success">Thanh toán</button>
     </div>
-
+    <div class="d-flex justify-content-end mt-3">
+        <h5>Tổng tiền: <span id="totalAmount">0 VND</span></h5>
+    </div>
     <!-- Lịch sử thanh toán -->
     <h4 class="mt-5">Lịch sử thanh toán</h4>
     <table class="table table-striped" id="paymentHistoryTable">
         <thead>
-            <tr>
-                <th scope="col"><input type="checkbox" id="selectAllPaymentHistory"></th>
-                <th scope="col">Mã thanh toán</th>
-                <th scope="col">Ngày thanh toán</th>
-                <th scope="col">Phương thức</th>
-                <th scope="col">Trạng thái</th>
-            </tr>
+        <tr>
+            <th scope="col"><input type="checkbox" id="selectAllPaymentHistory"></th>
+            <th scope="col">Mã thanh toán</th>
+            <th scope="col">Ngày thanh toán</th>
+            <th scope="col">Phương thức</th>
+            <th scope="col">Trạng thái</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td>#451</td>
-                <td>29/11/2024</td>
-                <td>Chuyển khoản</td>
-                <td>Thành công</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td>#451</td>
-                <td>29/11/2024</td>
-                <td>Chuyển khoản</td>
-                <td>Thành công</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td>#451</td>
-                <td>29/11/2024</td>
-                <td>Chuyển khoản</td>
-                <td>Thành công</td>
-            </tr>
+        <tr>
+            <td><input type="checkbox"></td>
+            <td>#451</td>
+            <td>29/11/2024</td>
+            <td>Chuyển khoản</td>
+            <td>Thành công</td>
+        </tr>
+        <tr>
+            <td><input type="checkbox"></td>
+            <td>#451</td>
+            <td>29/11/2024</td>
+            <td>Chuyển khoản</td>
+            <td>Thành công</td>
+        </tr>
+        <tr>
+            <td><input type="checkbox"></td>
+            <td>#451</td>
+            <td>29/11/2024</td>
+            <td>Chuyển khoản</td>
+            <td>Thành công</td>
+        </tr>
         </tbody>
     </table>
     <div class="d-flex justify-content-end">

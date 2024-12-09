@@ -1,112 +1,79 @@
 [
-  {
-    "name": "Phòng Bình Thường 1",
-    "note": "Phòng tiện nghi với đầy đủ các trang thiết bị hiện đại, thích hợp cho 2 người.",
-    "level": "Bình Thường",
-    "price": 1200000,
-    "area": "50m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View hồ bơi",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng Bình Thường 2",
-    "note": "Phòng đầy đủ tiện nghi, phù hợp cho 2 người.",
-    "level": "Bình Thường",
-    "price": 1100000,
-    "area": "50m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View thành phố",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng Gia Đình 1",
-    "note": "Phòng rộng rãi, thích hợp cho gia đình 4 người với đầy đủ tiện nghi.",
-    "level": "Gia Đình",
-    "price": 2500000,
-    "area": "80m²",
-    "bed": "2 giường đôi",
-    "people": "4 người",
-    "view": "View vườn",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng Gia Đình 2",
-    "note": "Phòng rộng, thích hợp cho gia đình hoặc nhóm bạn.",
-    "level": "Gia Đình",
-    "price": 2800000,
-    "area": "85m²",
-    "bed": "2 giường đôi",
-    "people": "5 người",
-    "view": "View bể bơi",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng Doanh Nhân 1",
-    "note": "Phòng sang trọng, tiện nghi, thích hợp cho doanh nhân làm việc.",
-    "level": "Doanh Nhân",
-    "price": 3000000,
-    "area": "60m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View thành phố",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng Doanh Nhân 2",
-    "note": "Phòng tiện nghi cho doanh nhân với không gian làm việc lý tưởng.",
-    "level": "Doanh Nhân",
-    "price": 3200000,
-    "area": "65m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View biển",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng VIP 1",
-    "note": "Phòng cao cấp với các tiện nghi sang trọng và dịch vụ đặc biệt.",
-    "level": "VIP",
-    "price": 4500000,
-    "area": "75m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View biển",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng VIP 2",
-    "note": "Phòng sang trọng, view đẹp, với đầy đủ tiện nghi hiện đại.",
-    "level": "VIP",
-    "price": 5000000,
-    "area": "80m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View hồ bơi",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng VIP 3",
-    "note": "Phòng cao cấp, tiện nghi đầy đủ, phù hợp cho những ai muốn nghỉ ngơi thư giãn.",
-    "level": "VIP",
-    "price": 4800000,
-    "area": "85m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View thành phố",
-    "image": "https://via.placeholder.com/150"
-  },
-  {
-    "name": "Phòng VIP 4",
-    "note": "Phòng cực kỳ sang trọng, thiết kế hiện đại và dịch vụ đẳng cấp.",
-    "level": "VIP",
-    "price": 6000000,
-    "area": "90m²",
-    "bed": "1 giường đôi",
-    "people": "2 người",
-    "view": "View biển",
-    "image": "https://via.placeholder.com/150"
-  }
+    {
+        "name": "Phòng Bình Thường 1",
+        "note": "Phòng tiện nghi với đầy đủ các trang thiết bị hiện đại, thích hợp cho 2 người.",
+        "level": "Bình Thường",
+        "price": 1200000,
+        "area": "50m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View hồ bơi",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng Gia Đình 2",
+        "note": "Phòng rộng, thích hợp cho gia đình hoặc nhóm bạn.",
+        "level": "Gia Đình",
+        "price": 2800000,
+        "area": "85m²",
+        "bed": "2 giường đôi",
+        "people": "5 người",
+        "view": "View bể bơi",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng Doanh Nhân 1",
+        "note": "Phòng sang trọng, tiện nghi, thích hợp cho doanh nhân làm việc.",
+        "level": "Doanh Nhân",
+        "price": 3000000,
+        "area": "60m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View thành phố",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng Doanh Nhân 2",
+        "note": "Phòng tiện nghi cho doanh nhân với không gian làm việc lý tưởng.",
+        "level": "Doanh Nhân",
+        "price": 3200000,
+        "area": "65m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View biển",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng VIP 1",
+        "note": "Phòng cao cấp với các tiện nghi sang trọng và dịch vụ đặc biệt.",
+        "level": "VIP",
+        "price": 4500000,
+        "area": "75m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View biển",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng VIP 2",
+        "note": "Phòng sang trọng, view đẹp, với đầy đủ tiện nghi hiện đại.",
+        "level": "VIP",
+        "price": 5000000,
+        "area": "80m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View hồ bơi",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng VIP 3",
+        "note": "Phòng cao cấp, tiện nghi đầy đủ, phù hợp cho những ai muốn nghỉ ngơi thư giãn.",
+        "level": "VIP",
+        "price": 4800000,
+        "area": "85m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View thành phố",
+        "image": "https://via.placeholder.com/150"
+    }
 ]

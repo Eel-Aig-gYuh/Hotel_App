@@ -1,0 +1,35 @@
+[
+    {
+        "name": "Phòng Gia Đình 1",
+        "note": "Phòng rộng rãi, thích hợp cho gia đình 4 người với đầy đủ tiện nghi.",
+        "level": "Gia Đình",
+        "price": 2500000,
+        "area": "80m²",
+        "bed": "2 giường đôi",
+        "people": "4 người",
+        "view": "View vườn",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng Bình Thường 2",
+        "note": "Phòng đầy đủ tiện nghi, phù hợp cho 2 người.",
+        "level": "Bình Thường",
+        "price": 1100000,
+        "area": "50m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View thành phố",
+        "image": "https://via.placeholder.com/150"
+    },
+    {
+        "name": "Phòng VIP 4",
+        "note": "Phòng cực kỳ sang trọng, thiết kế hiện đại và dịch vụ đẳng cấp.",
+        "level": "VIP",
+        "price": 6000000,
+        "area": "90m²",
+        "bed": "1 giường đôi",
+        "people": "2 người",
+        "view": "View biển",
+        "image": "https://via.placeholder.com/150"
+    }
+]
