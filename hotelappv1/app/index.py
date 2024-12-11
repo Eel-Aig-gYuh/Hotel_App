@@ -135,33 +135,57 @@ def write_json_file(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
 
-# API chuyển phòng từ booking_history.json sang rooms.json
-@app.route('/api/move-rooms', methods=['POST'])
-def move_rooms():
+
+@app.route('/delete-selected-rooms', methods=['POST'])
+def delete_selected_rooms():
+    data = request.get_json()
+    rooms = data.get('rooms', [])
+
+    if not rooms:
+        return jsonify({"status": "error", "message": "No rooms selected"})
+
     try:
-        # Nhận dữ liệu phòng từ frontend
-        rooms_to_move = request.json.get('rooms', [])
+        # Đọc dữ liệu từ booking_history.json
+        with open('data/booking_history.json', 'r', encoding='utf-8') as file:
+            history_data = json.load(file)
 
-        # Đọc dữ liệu hiện tại của các file JSON
-        booking_history = read_json_file('data/booking_history.json')
-        rooms = read_json_file('data/rooms.json')
+        # Đọc dữ liệu từ rooms.json
+        with open('data/rooms.json', 'r', encoding='utf-8') as rooms_file:
+            room_data = json.load(rooms_file)
 
-        # Xóa các phòng đã chọn khỏi booking_history.json
-        updated_booking_history = [
-            room for room in booking_history if room['name'] not in [r['name'] for r in rooms_to_move]
-        ]
+        # Các bước xử lý phòng cần xóa
+        deleted_rooms = []
+        for room in rooms:
+            room_name = room.get('name')
 
-        # Thêm các phòng vào rooms.json
-        rooms.extend(rooms_to_move)
+            # Tìm phòng trong lịch sử booking
+            delete_room = next((r for r in history_data if r['name'] == room_name), None)
 
-        # Ghi lại dữ liệu vào các file JSON
-        write_json_file('data/booking_history.json', updated_booking_history)
-        write_json_file('data/rooms.json', rooms)
+            if delete_room:
+                # Thêm phòng vào danh sách đã xóa
+                deleted_rooms.append(delete_room)
+                # Xóa phòng khỏi booking_history.json
+                history_data = [r for r in history_data if r['name'] != room_name]
 
-        return jsonify({'success': True}), 200
+        # Nếu có phòng bị xóa, cập nhật file
+        if deleted_rooms:
+            # Cập nhật file rooms.json
+            room_data.extend(deleted_rooms)
+            with open('data/rooms.json', 'w', encoding='utf-8') as rooms_file:
+                json.dump(room_data, rooms_file, ensure_ascii=False, indent=4)
+
+            # Cập nhật file booking_history.json
+            with open('data/booking_history.json', 'w', encoding='utf-8') as file:
+                json.dump(history_data, file, ensure_ascii=False, indent=4)
+
+        return jsonify({
+            "status": "success",
+            "message": "Rooms deleted successfully",
+            "reload": True  # Chỉ thị yêu cầu tải lại trang
+        })
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({'success': False, 'message': 'Có lỗi xảy ra khi xử lý dữ liệu'}), 500
+        return jsonify({"status": "error", "message": str(e)})
+
 
 @app.route("/logout")
 def logout_process():
