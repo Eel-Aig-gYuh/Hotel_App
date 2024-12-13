@@ -1,5 +1,6 @@
 import hashlib
-from models import Room, User, UserRole
+
+from models import Room, User, Staff, Hotel, Customer, RoomType, Rule
 from app import db, app
 import cloudinary.uploader
 from flask_login import current_user
@@ -9,15 +10,13 @@ def get_user_by_id(ids):
     return User.query.get(ids)
 
 
-def auth_user(username, password, role=None):
+def auth_user(username, password, is_admin):
     # băm mật khẩu
     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
 
     account = User.query.filter(User.username.__eq__(username),
-                                User.password.__eq__(password))
-
-    if role:
-        account = account.filter(User.user_role.__eq__(role))
+                                User.password.__eq__(password),
+                                User.is_admin.__eq__(is_admin))
 
     return account.first()
 
@@ -27,9 +26,7 @@ def add_user(username, password, first_name, last_name, email, phone, avatar):
     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
 
     # Thêm người dùng vào cơ sở dữ liệu
-    user = User(username=username, password=password,
-                first_name=first_name, last_name=last_name,
-                email=email, phone=phone, avatar=avatar)
+    user = User(username=username, password=password, is_admin=False)
 
     # Upload avatar nếu có
     if avatar:
@@ -69,7 +66,6 @@ def count_rooms():
 
 def count_users():
     return User.query.count()
-
 
 def read_hotel():
     pass

@@ -1,28 +1,31 @@
-{%extends 'layout/base.html'%}
-{%block content%}
+{% extends 'layout/base.html' %}
+
+{% block content %}
 <!-- Room Search -->
 <div class="container mt-4">
     <div class="row">
         <div class="col">
-            <form class="row g-3" action="/rooms" method="POST" enctype="multipart/form-data">
+            <form class="row g-3" action="/search_rooms" method="POST" enctype="multipart/form-data">
                 <div class="col-md-2">
-                    <select class="form-select" aria-label="Chọn loại phòng">
+                    <select class="form-select" name="room_type" aria-label="Chọn loại phòng">
                         <option selected>Phòng</option>
-                        <option value="1">Standard</option>
-                        <option value="2">VIP</option>
+                        <option value="1">Phòng Bình Thường</option>
+                        <option value="2">Phòng Gia Đình</option>
+                        <option value="3">Phòng Doanh Nhân</option>
+                        <option value="4">Phòng VIP</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control" placeholder="Ngày đến">
+                    <input type="date" class="form-control" name="check_in" placeholder="Ngày đến">
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control" placeholder="Ngày đi">
+                    <input type="date" class="form-control" name="check_out" placeholder="Ngày đi">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" placeholder="Người lớn" min="0">
+                    <input type="number" class="form-control" name="adults" placeholder="Người lớn" min="0">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" placeholder="Trẻ em" min="0">
+                    <input type="number" class="form-control" name="children" placeholder="Trẻ em" min="0">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Kiểm tra phòng</button>
@@ -32,31 +35,38 @@
     </div>
 </div>
 
+<!-- Display Rooms -->
 <div class="container mt-5">
     <h2 class="mb-4">Phòng nghỉ</h2>
-    {% if no_rooms_message %}
-    <div class="alert alert-warning" role="alert">
-        {{ no_rooms_message }}
-    </div>
-    <div class="no-rooms"></div>
-    {% else %}
     <div class="row">
         <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
             {% for room in rooms %}
             <div class="col-md-6 mb-4">
                 <div class="card h-100">
-<!--                    <img src="{{ room.images[0].url }}" class="card-img-top" alt="{{ room.name }}">-->
+                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.name }}"
+                         style="max-height: 200px; object-fit: cover;">
                     <div class="card-body">
-                        <h5 class="card-title">{{ room.name }}</h5>
-                        <p class="card-text">{{ room.description }}</p>
-                        <p class="card-text fw-bold">Giá: {{ room.prices }} VND</p>
-                        <p class="card-text">Loại phòng: {{ room.room_style.name }}</p>
-
+                        <h5 class="card-title">
+                            <a href="{{ url_for('room_detail',
+                                room_name=room.name,
+                                room_note=room.note,
+                                room_level=room.level,
+                                room_price=room.price,
+                                area=room.area,
+                                bed=room.bed,
+                                people=room.people,
+                                view=room.view) }}">
+                                {{ room.name }}
+                            </a>
+                        </h5>
+                        <p class="card-text">{{ room.note }}</p>
+                        <p class="card-text fw-bold">Giá: {{ "{:,.0f}".format(room.price).replace(',', '.') }} VND</p>
+                        <p class="card-text">Loại phòng: {{ room.level }}</p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-square"></i> 50m² </li>
-                            <li><i class="bi bi-bed"></i> 3 </li>
-                            <li><i class="bi bi-people"></i> 5 </li>
-                            <li><i class="bi bi-eye"></i> 3 </li>
+                            <li><i class="bi bi-square"></i> {{ room.area }}</li>
+                            <li><i class="bi bi-bed"></i> {{ room.bed }}</li>
+                            <li><i class="bi bi-people"></i> {{ room.people }}</li>
+                            <li><i class="bi bi-eye"></i> {{ room.view }}</li>
                         </ul>
                     </div>
                 </div>
@@ -64,8 +74,6 @@
             {% endfor %}
         </div>
     </div>
-    {% endif %}
 </div>
 
 {% endblock %}
-

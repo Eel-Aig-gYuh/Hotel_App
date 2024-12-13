@@ -1,5 +1,6 @@
 <nav class="navbar navbar-light bg-light px-3">
     <div class="container d-flex justify-content-between align-items-center">
+        <!-- Tên web bên trái -->
         <div class="d-flex align-items-center">
             <span class="ms-2 hotel-name">Dream Hotel</span>
         </div>
@@ -9,19 +10,6 @@
                 <img src="https://via.placeholder.com/40" alt="Logo"> <!-- Thay bằng logo -->
             </a>
         </div>
-
-        {% if current_user.is_authenticated %}
-        <div class="nav-item">
-            <a class="nav-link text-danger" href="/">
-                <img src="{{ current_user.avatar }}" width="25" class="rounded-circle" />
-                Chào {{ current_user.username }}
-            </a>
-        </div>
-         <div class="d-flex">
-            <a href="/logout" class="btn btn-outline-primary me-2 custom-btn">Đăng xuất</a>
-        </div>
-        {% else %}
-
         <!-- Nút đăng ký và đăng nhập bên phải -->
         <div class="d-flex align-items-center">
             {% if current_user.is_authenticated %}
@@ -35,7 +23,6 @@
                 <a href="/login" class="btn btn-primary">Đăng nhập</a>
             {% endif %}
         </div>
-        {% endif %}
     </div>
 </nav>
 

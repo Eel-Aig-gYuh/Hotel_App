@@ -1,22 +1,25 @@
 
-from app import db, app, dao
+from app import db, app
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
-from models import User, UserRole, Room, Hotel, HotelLocation, Bed, Service, Feature, Rule
+from models import Room, RoomType, Hotel, Service, Rule, Image
 from flask_login import current_user, logout_user
 from flask import redirect
 
-admin = Admin(app, name='Dream Hotel', template_mode='bootstrap4')
 
 class Authenticated(ModelView):
+    can_edit = True
+    can_create = True
+    can_delete = True
     page_size = 5
     can_export = True
     column_display_pk = True
     can_view_details = True
+    column_display_all_relations = True
 
     def is_accessible(self):
         return (current_user.is_authenticated
-                and (current_user.user_role.__eq__(UserRole.ADMIN)))
+                and (current_user.is_admin.__eq__(True)))
 
 
 class MyView(BaseView):
@@ -25,36 +28,28 @@ class MyView(BaseView):
 
 
 class RuleView(Authenticated):
-    pass
+    column_list = ['id', 'name', 'value', 'staffs']
 
 class RoomView(Authenticated):
-    column_list = ('id', 'name', 'prices', 'room_status', 'room_style')
-
-class BedView(Authenticated):
-    pass
-
-class FeatureView(Authenticated):
-    pass
+    column_list = ['id', 'name', 'is_available', 'active', 'room_type_id', 'hotel_id']
 
 class HotelView(Authenticated):
-    column_list = ('id', 'name', 'locations')
+    column_list = ['id', 'name', 'address', 'phone', 'email', 'checkin_time', 'checkout_time', 'images', 'active']
 
-class HotelLocationView(Authenticated):
-    pass
+class ImageView(Authenticated):
+    column_list = ['id', 'uri']
 
-class UserView(Authenticated):
-    pass
+class RoomTypeView(Authenticated):
+    column_list = ['id', 'name', 'description', 'price_per_night', 'capacity', 'active', 'services', 'images']
 
 class ServiceView(Authenticated):
-    pass
-
+    column_list = ['id', 'name', 'floor', 'start_time', 'end_time', 'active', 'images']
 
 class LogoutView(MyView):
     @expose("/")
     def index(self):
         logout_user()
         return redirect('/admin')
-
 
 class StatsView(MyView):
     @expose("/")
@@ -63,13 +58,13 @@ class StatsView(MyView):
         return self.render('admin/stats.html')
 
 
-admin.add_view(UserView(User, db.session))
-admin.add_view(RuleView(Rule, db.session))
-admin.add_view(HotelView(Hotel, db.session))
-admin.add_view(HotelLocationView(HotelLocation, db.session))
-admin.add_view(RoomView(Room, db.session))
-admin.add_view(BedView(Bed, db.session))
-admin.add_view(FeatureView(Feature, db.session))
+admin = Admin(app, name='Dream Hotel', template_mode='bootstrap4')
 admin.add_view(ServiceView(Service, db.session))
+admin.add_view(ImageView(Image, db.session))
+admin.add_view(HotelView(Hotel, db.session))
+admin.add_view(RoomTypeView(RoomType, db.session))
+admin.add_view(RoomView(Room, db.session))
+admin.add_view(RuleView(Rule, db.session))
+
 admin.add_view(StatsView(name='Thống kê - báo cáo'))
 admin.add_view(LogoutView(name='Đăng xuất'))

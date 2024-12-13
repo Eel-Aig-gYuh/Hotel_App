@@ -2,7 +2,7 @@ import math
 from flask import render_template, request, redirect, session
 from app import dao, login, app
 from flask_login import login_user, logout_user
-from models import UserRole, Room, RoomStyle, RoomStatus
+from models import Room
 from sqlalchemy.orm import joinedload
 
 
@@ -40,11 +40,11 @@ def search_rooms():
     query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
 
     # Lọc trạng thái phòng
-    query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
-
-    # Lọc loại phòng
-    if room_style and (room_style in RoomStyle.__members__):
-        query = query.filter(Room.room_style == RoomStyle[room_style])
+    # query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
+    #
+    # # Lọc loại phòng
+    # if room_style and (room_style in RoomStyle.__members__):
+    #     query = query.filter(Room.room_style == RoomStyle[room_style])
 
     # Thực hiện truy vấn
     room = query.all()
@@ -56,32 +56,6 @@ def search_rooms():
 
     return render_template('layout/rooms.html', rooms=room, no_rooms_message=no_rooms_message)
 
-# @app.route('/rooms')
-# def rooms():
-#     kw = request.args.get('kw')
-#     room_id = request.args.get('id')
-#     page = request.args.get('page', 1)
-#     page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
-#     total = dao.count_rooms()
-#
-#     rooms = dao.load_room(room_id=room_id, kw=kw, page=page)
-#
-#     return render_template('layout/rooms.html', rooms=rooms, pages=math.ceil(total / page_size))
-
-#     # # Lọc loại phòng
-#     # # if room_style and room_style != "Phòng":
-#     # #     query = query.filter(Room.room_style == RoomStyle[room_style])
-#     #
-#     # # Thực hiện truy vấn
-#     # # rooms = query.all()
-#     #
-#     # # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
-#     # if not rooms:
-#     #     no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
-#     # else:
-#     #     no_rooms_message = None
-#     #
-#     # return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
 
 # Route cho trang Chi tiết phòng
 @app.route('/room_detail')
@@ -119,7 +93,7 @@ def login_admin_process():
     username = request.form.get('username')
     password = request.form.get('password')
 
-    account = dao.auth_user(username=username, password=password, role=UserRole.ADMIN)
+    account = dao.auth_user(username=username, password=password, is_admin=True)
 
     if account:
         login_user(account)
