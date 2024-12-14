@@ -2,7 +2,7 @@
 from app import db, app
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
-from models import Room, RoomType, Hotel, Service, Rule, Image
+from models import Room, RoomType, Service, Rule, Image, Hotel
 from flask_login import current_user, logout_user
 from flask import redirect
 
@@ -13,9 +13,7 @@ class Authenticated(ModelView):
     can_delete = True
     page_size = 5
     can_export = True
-    column_display_pk = True
     can_view_details = True
-    column_display_all_relations = True
 
     def is_accessible(self):
         return (current_user.is_authenticated
@@ -43,7 +41,7 @@ class RoomTypeView(Authenticated):
     column_list = ['id', 'name', 'description', 'price_per_night', 'capacity', 'active', 'services', 'images']
 
 class ServiceView(Authenticated):
-    column_list = ['id', 'name', 'floor', 'start_time', 'end_time', 'active', 'images']
+    column_list = ['id', 'name', 'floor', 'start_time', 'end_time', 'description', 'active', 'images']
 
 class LogoutView(MyView):
     @expose("/")
@@ -59,10 +57,10 @@ class StatsView(MyView):
 
 
 admin = Admin(app, name='Dream Hotel', template_mode='bootstrap4')
-admin.add_view(ServiceView(Service, db.session))
-admin.add_view(ImageView(Image, db.session))
-admin.add_view(HotelView(Hotel, db.session))
 admin.add_view(RoomTypeView(RoomType, db.session))
+admin.add_views(ImageView(Image, db.session))
+admin.add_view(ServiceView(Service, db.session))
+admin.add_views(HotelView(Hotel, db.session))
 admin.add_view(RoomView(Room, db.session))
 admin.add_view(RuleView(Rule, db.session))
 

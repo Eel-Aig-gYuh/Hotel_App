@@ -5,7 +5,7 @@
 <div class="container mt-4">
     <div class="row">
         <div class="col">
-            <form class="row g-3" action="/search_rooms" method="POST" enctype="multipart/form-data">
+            <form class="row g-3" action="{{url_for('search_rooms')}}" method="POST" enctype="multipart/form-data">
                 <div class="col-md-2">
                     <select class="form-select" name="room_type" aria-label="Chọn loại phòng">
                         <option selected>Phòng</option>
@@ -43,30 +43,22 @@
             {% for room in rooms %}
             <div class="col-md-6 mb-4">
                 <div class="card h-100">
-                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.name }}"
+                    <img src="{{room.images[0].uri}}" class="card-img-top" alt="{{ room.name }}"
                          style="max-height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <a href="{{ url_for('room_detail',
-                                room_name=room.name,
-                                room_note=room.note,
-                                room_level=room.level,
-                                room_price=room.price,
-                                area=room.area,
-                                bed=room.bed,
-                                people=room.people,
-                                view=room.view) }}">
+                            <a href="{{url_for('booking_process')}}">
                                 {{ room.name }}
                             </a>
                         </h5>
-                        <p class="card-text">{{ room.note }}</p>
-                        <p class="card-text fw-bold">Giá: {{ "{:,.0f}".format(room.price).replace(',', '.') }} VND</p>
-                        <p class="card-text">Loại phòng: {{ room.level }}</p>
+                        <p class="card-text"></p>
+                        <p class="card-text fw-bold">Giá: {{room.price_per_night}} VND</p>
+                        <p class="card-text">Miêu tả: {{ room.description }}</p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-square"></i> {{ room.area }}</li>
-                            <li><i class="bi bi-bed"></i> {{ room.bed }}</li>
-                            <li><i class="bi bi-people"></i> {{ room.people }}</li>
-                            <li><i class="bi bi-eye"></i> {{ room.view }}</li>
+                            <li><i class="bi bi-square"></i> </li>
+                            <li><i class="bi bi-bed"></i> </li>
+                            <li><i class="bi bi-people"></i>  {{room.capacity}} </li>
+                            <li><i class="bi bi-eye"></i> </li>
                         </ul>
                     </div>
                 </div>

@@ -20,6 +20,11 @@ class RoomStyle(RoleEnum):
     VIP = 4
 
 
+class TimestampMixin:
+    created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now, nullable=False)
+
+
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
 
@@ -41,7 +46,7 @@ class Profile(db.Model):
     first_name = Column(NVARCHAR(20), nullable=False)
     phone = Column(CHAR(10), nullable=False, unique=True)
     email = Column(String(100), nullable=True, unique=True)
-    avatar = Column(String(100), nullable=True)
+    avatar = Column(String(255), nullable=True)
     active = Column(Boolean, default=True)
 
 
@@ -75,7 +80,7 @@ class Customer(Profile):
         return self.first_name
 
 
-class Rule(db.Model):
+class Rule(db.Model, TimestampMixin):
     __tablename__ = 'rule'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -178,6 +183,7 @@ class Service(db.Model):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(NVARCHAR(100), nullable=False, unique=True)
+    description = Column(NVARCHAR(255), nullable=True)
     floor = Column(Integer, nullable=True)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
@@ -196,13 +202,13 @@ class Service(db.Model):
 class Image(db.Model):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    uri = Column(String(100), nullable=True)
+    uri = Column(String(255), nullable=True)
 
     def __str__(self):
         return self.uri
 
 
-class Booking(db.Model):
+class Booking(db.Model, TimestampMixin):
     __tablename__ = 'booking'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -221,12 +227,11 @@ class Booking(db.Model):
         return self.id
 
 
-class Bill(db.Model):
+class Bill(db.Model, TimestampMixin):
     __tablename__ = 'bill'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     total = Column(DECIMAL(18,2), nullable=False)
-    payment_date = Column(DateTime, default=datetime.datetime.now())
     payment_method = Column(Enum(PaidMethod), default=PaidMethod.CHUYEN_KHOAN)
     active = Column(Boolean, default=True)
 
@@ -567,21 +572,24 @@ if __name__ == '__main__':
             "service": [
                 {
                     "id": 1,
-                    "name": "Spa",
+                    "name": "Spa & Trung tâm chăm sóc sức khỏe",
+                    "description": "Thư giãn và tái tạo năng lượng với các liệu trình chăm sóc sức khỏe và sắc đẹp tại trung tâm spa của chúng tôi.",
                     "floor": 8,
                     "start_time": "08:00:00",
                     "end_time": "20:00:00",
                 },
                 {
                     "id": 2,
-                    "name": "Gym",
+                    "name": "Phòng gym hiện đại",
+                    "description": "Duy trì thói quen luyện tập với hệ thống thiết bị tập gym hiện đại, được thiết kế phù hợp cho mọi nhu cầu.",
                     "floor": 7,
                     "start_time": "06:00:00",
                     "end_time": "22:00:00",
                 },
                 {
                     "id": 3,
-                    "name": "Restaurant",
+                    "name": "Nhà hàng cao cấp",
+                    "description": "Thưởng thức ẩm thực tinh tế tại nhà hàng của chúng tôi với đa dạng món ăn từ khắp nơi trên thế giới, cùng không gian sang trọng và dịch vụ chu đáo.",
                     "floor": 1,
                     "start_time": "07:00:00",
                     "end_time": "22:00:00",
@@ -589,7 +597,8 @@ if __name__ == '__main__':
                 },
                 {
                     "id": 4,
-                    "name": "Pool",
+                    "name": "Hồ bơi vô cực",
+                    "description": "Tận hưởng không gian hồ bơi vô cực với tầm nhìn toàn cảnh thành phố, là nơi lý tưởng để thư giãn và tận hưởng ánh nắng mặt trời.",
                     "floor": 9,
                     "start_time": "06:00:00",
                     "end_time": "21:00:00",
@@ -597,46 +606,78 @@ if __name__ == '__main__':
                 }
             ],
             "image": [
-                {
-                    "id": 1,
-                    "uri": "room_type1_image1.png",
-                    "room_type_id": 1,
-                },
-                {
-                    "id": 2,
-                    "uri": "room_type2_image1.png",
-                    "room_type_id": 2,
-                },
-            ],
-            "rule_staff": [
-                {"staff_id": 2, "rule_id": 1},
-                {"staff_id": 4, "rule_id": 2},
-            ],
-            "room_service": [
-                {"room_type_id": 10, "service_id": 1},
-                {"room_type_id": 10, "service_id": 2},
-                {"room_type_id": 10, "service_id": 3},
-                {"room_type_id": 10, "service_id": 4},
-
-                {"room_type_id": 9, "service_id": 1},
-                {"room_type_id": 9, "service_id": 2},
-                {"room_type_id": 9, "service_id": 3},
-                {"room_type_id": 9, "service_id": 4},
-
-                {"room_type_id": 8, "service_id": 1},
-                {"room_type_id": 8, "service_id": 2},
-                {"room_type_id": 8, "service_id": 3},
-
-                {"room_type_id": 7, "service_id": 1},
-                {"room_type_id": 7, "service_id": 2},
-                {"room_type_id": 7, "service_id": 3},
-
-                {"room_type_id": 6, "service_id": 1},
-                {"room_type_id": 6, "service_id": 2},
-                {"room_type_id": 6, "service_id": 3},
-
-                {"room_type_id": 5, "service_id": 3},
-                {"room_type_id": 4, "service_id": 3},
+                {"id": 1,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991046/Images/Carousel/fsajqqioe5z4xps5pfeh.jpg"},
+                {"id": 2,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991046/Images/Carousel/ka7idj5hk81cmmbhobvb.jpg"},
+                {"id": 3,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991046/Images/Carousel/nu2r3y3x55j1eibbsdne.jpg"},
+                {"id": 4,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991046/Images/Carousel/imala2wj716wfnxnoflm.jpg"},
+                {"id": 5,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991046/Images/CoSoVatChat/Gym/yljggdus8txvmgctnxnc.jpg"},
+                {"id": 6,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991047/Images/CoSoVatChat/Pool/qdcpvdigwdmfweokdl2h.jpg"},
+                {"id": 7,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991047/Images/CoSoVatChat/Restaurant/v0x4szuams3bodaztcpg.jpg"},
+                {"id": 8,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991047/Images/CoSoVatChat/Spa/wfybdltlp5l67izresyk.jpg"},
+                {"id": 9,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991047/Images/Hotel/AmThucDaDang/mdhrv0dl4jzxsizc0slu.jpg"},
+                {"id": 10,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991047/Images/Hotel/PhongNghiCaoCap/g8rhfhvavopee1bu8bvl.jpg"},
+                {"id": 11,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991048/Images/Hotel/ThuGianGiaiTri/c5jjqrrwy1mjq9zif5cb.jpg"},
+                {"id": 12,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991048/Images/Hotel/VeChungToi/exoxlgbm22cw4iijh8gc.jpg"},
+                {"id": 13,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991048/Images/PhongNghi/BinhThuong/w6md0ncn2xz2cxtalyfi.jpg"},
+                {"id": 14,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991048/Images/PhongNghi/BinhThuong/hlxeq3zl2xoxlkwheptv.jpg"},
+                {"id": 15,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991048/Images/PhongNghi/BinhThuong/gp8ngcwd28q8tq5yqowg.jpg"},
+                {"id": 16,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991048/Images/PhongNghi/BinhThuong/kuiw6o45olenke5dpsbe.jpg"},
+                {"id": 17,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991049/Images/PhongNghi/DoanhNhan/ykzzphvytnjyshtavayl.jpg"},
+                {"id": 18,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991049/Images/PhongNghi/DoanhNhan/a1rglgdfoy6ahjxw6u4w.jpg"},
+                {"id": 19,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991049/Images/PhongNghi/DoanhNhan/bzcddvowdsrsrh810ac2.jpg"},
+                {"id": 20,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991049/Images/PhongNghi/DoanhNhan/artsllamvvj9kr67hwll.jpg"},
+                {"id": 21,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991050/Images/PhongNghi/GiaDinh/o9sscmm7sau0lopnjblo.jpg"},
+                {"id": 22,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991050/Images/PhongNghi/GiaDinh/gu6dvxdokkusmgvplonu.jpg"},
+                {"id": 23,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991050/Images/PhongNghi/GiaDinh/ba99vbydwxlwokjeoyt2.jpg"},
+                {"id": 24,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991049/Images/PhongNghi/GiaDinh/xsinxqsl4m3dzkrsp6xa.jpg"},
+                {"id": 25,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991051/Images/PhongNghi/VIP/vtjrofs07lucxoiandeh.jpg"},
+                {"id": 26,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991050/Images/PhongNghi/VIP/ibc9mjhhnpdyzpl5kvmj.jpg"},
+                {"id": 27,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991050/Images/PhongNghi/VIP/hzrzqlo0s3btwg88q6ua.jpg"},
+                {"id": 28,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991050/Images/PhongNghi/VIP/kt8fgdkequvkgfvrwuvu.jpg"},
+                {"id": 29,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991051/Images/TabNavigation/CauChuyen/cjfqfzwfrfulvcxdwqyb.jpg"},
+                {"id": 30,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991051/Images/TabNavigation/CauChuyen/hioruykz4nzulrqo6m5k.jpg"},
+                {"id": 31,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991051/Images/TabNavigation/CauChuyen/s8b7ax54wfuorz40ggmf.jpg"},
+                {"id": 32,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991052/Images/TabNavigation/ThamPhong/jaf4xowxd3lijqatpr6j.jpg"},
+                {"id": 33,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991052/Images/TabNavigation/ThamPhong/tb6viosxcmvinov3wgva.jpg"},
+                {"id": 34,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991051/Images/TabNavigation/ThamPhong/gknvyvq6sjx39k8lejjp.jpg"},
+                {"id": 35,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991052/Images/TabNavigation/TraiNghiem/oqhcuv40akbiv66f8gyp.jpg"},
+                {"id": 36,
+                 "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991052/Images/TabNavigation/TraiNghiem/fqmv0iuzcqhcsdetdqjk.jpg"},
             ],
         }
 
@@ -663,5 +704,8 @@ if __name__ == '__main__':
 
         for service in data['service']:
             db.session.add(Service(**service))
+
+        for image in data['image']:
+            db.session.add(Image(**image))
 
         db.session.commit()
