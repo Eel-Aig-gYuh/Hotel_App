@@ -119,15 +119,17 @@ def register_account():
 
 
 # =============== phong nghi ===============
-@app.route('/rooms')
-def rooms():
+@app.route('/rooms', methods=['get', 'post'])
+def room_process():
     kw = request.args.get('kw')
     room_id = request.args.get('id')
     page = request.args.get('page', 1)
     page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
     total = dao.count_rooms()
 
-    room = dao.load_room(room_id=room_id, kw=kw, page=page)
+    room_style = request.args.get('room_style')  # Phòng
+
+    room = dao.load_room(room_id=room_id, room_style=room_style, page=page)
 
     return render_template('layout/rooms.html', rooms=room, pages=math.ceil(total / page_size),)
 
@@ -149,6 +151,7 @@ def search_rooms():
     # Lọc loại phòng
     # if room_style and room_style != "Phòng":
     #     query = query.filter(Room.room_style == RoomStyle[room_style])
+    print (room_style)
 
     # Thực hiện truy vấn
     rooms = dao.load_room()
@@ -277,7 +280,7 @@ def delete_selected_rooms():
 # Route cho trang Khách sạn
 @app.route('/hotel')
 def hotel():
-    return render_template('layout/hotel.html', rooms=rooms)
+    return render_template('layout/hotel.html',)
 
 # Route cho trang Cơ sở vật chất
 @app.route('/facilities')

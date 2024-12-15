@@ -5,9 +5,9 @@
 <div class="container mt-4">
     <div class="row">
         <div class="col">
-            <form class="row g-3" action="{{url_for('search_rooms')}}" method="POST" enctype="multipart/form-data">
+            <form class="row g-3" action="{{url_for('room_process')}}" method="POST" enctype="multipart/form-data">
                 <div class="col-md-2">
-                    <select class="form-select" name="room_type" aria-label="Chọn loại phòng">
+                    <select class="form-select" name="room_style" aria-label="Chọn loại phòng">
                         <option selected>Phòng</option>
                         <option value="1">Phòng Bình Thường</option>
                         <option value="2">Phòng Gia Đình</option>
@@ -22,10 +22,10 @@
                     <input type="date" class="form-control" name="check_out" placeholder="Ngày đi">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" name="adults" placeholder="Người lớn" min="0">
+                    <input type="number" class="form-control" name="adults" value="1" placeholder="Người lớn" min="0">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" name="children" placeholder="Trẻ em" min="0">
+                    <input type="number" class="form-control" name="children" value="0" placeholder="Trẻ em" min="0">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Kiểm tra phòng</button>
@@ -47,7 +47,7 @@
                          style="max-height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <a href="{{url_for('booking_process')}}">
+                            <a href="{{url_for('room_process')}}">
                                 {{ room.name }}
                             </a>
                         </h5>

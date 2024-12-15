@@ -40,17 +40,16 @@ def add_user(first_name, last_name, cmnd, email, phone, username, password):
     db.session.commit()
 
 
-def load_room(room_id=None, kw=None, page=1):
-    # lấy phòng trống.
-    available_room = db.session.query(Room).filter(Room.active==True and Room.is_available==True).order_by('id').all()
+def load_room(room_id=None, room_style=None, page=1):
+    room_types_with_available_rooms = (
+        db.session.query(RoomType).order_by('id')
+        .filter(RoomType.rooms.any(Room.is_available == True))  # Use backref to filter rooms
+    )
 
-    # lấy room_type tương ứng.
-    available_room_types = set()
-    for room in available_room:
-        room_type = room.room_room_type
-        available_room_types.add(room_type)
+    if room_style:
+        room_types_with_available_rooms = room_types_with_available_rooms.filter(RoomType.name.value.__eq__(room_style))
 
-    return available_room_types
+    return room_types_with_available_rooms.all()
 
 
 def load_img(type_img):
