@@ -40,17 +40,31 @@ def add_user(first_name, last_name, cmnd, email, phone, username, password):
     db.session.commit()
 
 
-def load_room(room_id=None, room_style=None, page=1):
+def load_room(room_id=None, room_style=None, check_in=None, check_out=None, adult=None, children=None, page=1):
     room_types_with_available_rooms = (
         db.session.query(RoomType).order_by('id')
         .filter(RoomType.rooms.any(Room.is_available == True))  # Use backref to filter rooms
     )
 
     if room_style:
-        room_types_with_available_rooms = room_types_with_available_rooms.filter(RoomType.name.value.__eq__(room_style))
+        room_types_with_available_rooms = room_types_with_available_rooms.filter(RoomType.name.__eq__(room_style))
+
+    if check_in:
+        # room_types_with_available_rooms = room_types_with_available_rooms.filter.exclute
+        pass
+
+    if check_out:
+        pass
+
+    # if adult:
+    #     room_types_with_available_rooms = (room_types_with_available_rooms
+    #                                        .filter(RoomType.capacity.__gt__(0),
+    #                                                RoomType.capacity.__lt__(int(adult) + int(children)/2)))
 
     return room_types_with_available_rooms.all()
 
+def load_hotel():
+    pass
 
 def load_img(type_img):
     img = Image.query.filter(Image.uri.contains(type_img)).all()

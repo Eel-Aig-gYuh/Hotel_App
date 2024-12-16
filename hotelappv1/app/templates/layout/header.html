@@ -2,7 +2,8 @@
     <div class="container d-flex justify-content-between align-items-center">
         <!-- Tên web bên trái -->
         <div class="d-flex align-items-center">
-            <span class="ms-2 hotel-name">Dream Hotel</span>
+            <a href="/"> <span class="ms-2 hotel-name">Dream Hotel</span> </a>
+
         </div>
         <!-- Logo ở giữa -->
         <div class="d-flex justify-content-center">
@@ -29,11 +30,13 @@
 <!-- Tabs -->
 <div class="container mt-3">
     <ul class="navbar-nav d-flex justify-content-center flex-row">
+        {% for hotel in hotels %}
         <li class="nav-item mx-3"><a class="nav-link" href="/">Trang chủ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/hotel">Khách sạn</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/rooms">Phòng nghỉ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/facilities">Cơ sở vật chất</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/contact">Liên hệ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/pay">Đã đặt</a></li>
+        {% endfor %}
     </ul>
 </div>

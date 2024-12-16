@@ -128,41 +128,53 @@ def room_process():
     total = dao.count_rooms()
 
     room_style = request.args.get('room_style')  # Phòng
+    check_in = request.args.get('check_in')  # Ngày đến
+    check_out = request.args.get('check_out')  # Ngày đi
+    adults = request.args.get('adults')  # Người lớn
+    children = request.args.get('children')  # Trẻ em
 
-    room = dao.load_room(room_id=room_id, room_style=room_style, page=page)
+    print(room_style)
 
-    return render_template('layout/rooms.html', rooms=room, pages=math.ceil(total / page_size),)
-
-@app.route('/search_rooms', methods=['GET', 'POST'])
-def search_rooms():
-    # Lấy dữ liệu từ form
-    room_style = request.args.get('room_style')  # Phòng
-    check_in = request.args.get('check_in')      # Ngày đến
-    check_out = request.args.get('check_out')    # Ngày đi
-    adults = request.args.get('adults')          # Người lớn
-    children = request.args.get('children')      # Trẻ em
-
-    # Tạo query lọc
-    # query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
-
-    # Lọc trạng thái phòng
-    # query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
-
-    # Lọc loại phòng
-    # if room_style and room_style != "Phòng":
-    #     query = query.filter(Room.room_style == RoomStyle[room_style])
-    print (room_style)
-
-    # Thực hiện truy vấn
-    rooms = dao.load_room()
+    room = dao.load_room(room_id=room_id, room_style=room_style, adult=adults, children=children, check_in=check_in, check_out=check_out, page=page)
 
     # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
-    if not rooms:
+    if not room:
         no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
     else:
         no_rooms_message = None
 
-    return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
+    return render_template('layout/rooms.html', rooms=room, pages=math.ceil(total / page_size))
+
+# @app.route('/search_rooms', methods=['GET', 'POST'])
+# def search_rooms():
+#     # Lấy dữ liệu từ form
+#     room_style = request.args.get('room_style')  # Phòng
+#     check_in = request.args.get('check_in')      # Ngày đến
+#     check_out = request.args.get('check_out')    # Ngày đi
+#     adults = request.args.get('adults')          # Người lớn
+#     children = request.args.get('children')      # Trẻ em
+#
+#     # Tạo query lọc
+#     # query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
+#
+#     # Lọc trạng thái phòng
+#     # query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
+#
+#     # Lọc loại phòng
+#     # if room_style and room_style != "Phòng":
+#     #     query = query.filter(Room.room_style == RoomStyle[room_style])
+#     print (room_style)
+#
+#     # Thực hiện truy vấn
+#     rooms = dao.load_room()
+#
+#     # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
+#     if not rooms:
+#         no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
+#     else:
+#         no_rooms_message = None
+#
+#     return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
 
 
 @app.route('/room_detail/<string:room_name>/<string:room_note>/<string:room_level>/<int:room_price>/<string:area>/<string:bed>/<string:people>/<string:view>')
@@ -279,8 +291,11 @@ def delete_selected_rooms():
 
 # Route cho trang Khách sạn
 @app.route('/hotel')
-def hotel():
-    return render_template('layout/hotel.html',)
+def hotel_process():
+
+    hotel = dao.load_hotel()
+
+    return render_template('layout/hotel.html', hotels=hotel)
 
 # Route cho trang Cơ sở vật chất
 @app.route('/facilities')
