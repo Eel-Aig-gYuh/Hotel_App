@@ -1,11 +1,13 @@
 import math
 import json
 import os
+import stripe
 from flask import render_template, request, redirect, session, url_for, jsonify
 from app import dao, login, app
 from flask_login import login_user, logout_user, current_user
 from models import UserRole, Room, RoomStyle, RoomStatus, db
 from sqlalchemy.orm import joinedload
+
 
 @app.route("/")
 def index():
@@ -26,20 +28,25 @@ def index():
 def load_account(account_id):
     return dao.get_account_by_id(int(account_id))
 
+
 @app.route('/rooms')
 def rooms():
     with open('data/rooms.json', 'r', encoding='utf-8') as file:
         rooms_data = json.load(file)
-    return render_template('layout/rooms.html', rooms=rooms_data)
+
+    # Lọc ra các phòng có is_available = True
+    available_rooms = [room for room in rooms_data if room.get('is_available', True)]
+    return render_template('layout/rooms.html', rooms=available_rooms)
+
 
 @app.route('/search_rooms', methods=['GET', 'POST'])
 def search_rooms():
     # Lấy dữ liệu từ form
     room_style = request.args.get('room_style')  # Phòng
-    check_in = request.args.get('check_in')      # Ngày đến
-    check_out = request.args.get('check_out')    # Ngày đi
-    adults = request.args.get('adults')          # Người lớn
-    children = request.args.get('children')      # Trẻ em
+    check_in = request.args.get('check_in')  # Ngày đến
+    check_out = request.args.get('check_out')  # Ngày đi
+    adults = request.args.get('adults')  # Người lớn
+    children = request.args.get('children')  # Trẻ em
 
     # Tạo query lọc
     query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
@@ -63,22 +70,46 @@ def search_rooms():
     return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
 
 
-@app.route('/room_detail/<string:room_name>/<string:room_note>/<string:room_level>/<int:room_price>/<string:area>/<string:bed>/<string:people>/<string:view>')
-def room_detail(room_name, room_note, room_level, room_price, area, bed, people, view):
+@app.route('/room_detail/<int:room_id>')
+def room_detail(room_id):
+    # Đọc danh sách phòng từ rooms.json
+    with open('data/rooms.json', 'r', encoding='utf-8') as file:
+        rooms_data = json.load(file)
+
+    # Tìm phòng được xem
+    roomdetail = None
+    for room in rooms_data:
+        if room['room_id'] == room_id:
+            roomdetail = room
+            break
+
+    # Kiểm tra nếu không tìm thấy phòng, trả về thông báo lỗi
+    if roomdetail is None:
+        return "Room not found", 404
+
+    # Truy cập các giá trị từ dictionary 'roomdetail'
+    room_id = roomdetail['room_id']
+    room_name = roomdetail['room_name']
+    room_description = roomdetail['room_description']
+    room_type = roomdetail['room_type']
+    price_per_night = roomdetail['price_per_night']
+    capacity = roomdetail['capacity']
+    image = roomdetail['image']
+
     # Xử lý dữ liệu và trả về trang chi tiết phòng
     return render_template('layout/room_detail.html',
+                           room_id=room_id,
                            room_name=room_name,
-                           room_note=room_note,
-                           room_level=room_level,
-                           room_price=room_price,
-                           area=area,
-                           bed=bed,
-                           people=people,
-                           view=view)
+                           room_description=room_description,
+                           room_type=room_type,
+                           price_per_night=price_per_night,
+                           capacity=capacity,
+                           image=image)
+
 
 # Route xử lý đặt phòng
-@app.route('/book_room/<string:room_name>')
-def book_room(room_name):
+@app.route('/book_room/<int:room_id>')
+def book_room(room_id):
     # Đọc danh sách phòng từ rooms.json
     with open('data/rooms.json', 'r', encoding='utf-8') as file:
         rooms_data = json.load(file)
@@ -86,26 +117,15 @@ def book_room(room_name):
     # Tìm phòng được đặt
     room_to_book = None
     for room in rooms_data:
-        if room['name'] == room_name:
+        if room['room_id'] == room_id:
             room_to_book = room
             break
 
     if room_to_book:
-        # Ghi vào booking_history.json
-        try:
-            with open('data/booking_history.json', 'r', encoding='utf-8') as history_file:
-                booking_history = json.load(history_file)
-        except FileNotFoundError:
-            booking_history = []
+        # Cập nhật is_available từ True thành False
+        room_to_book['is_available'] = False
 
-        booking_history.append(room_to_book)
-
-        with open('data/booking_history.json', 'w', encoding='utf-8') as history_file:
-            json.dump(booking_history, history_file, ensure_ascii=False, indent=4)
-
-        # Xóa phòng khỏi rooms.json
-        rooms_data = [room for room in rooms_data if room['name'] != room_name]
-
+        # Lưu lại dữ liệu đã thay đổi vào rooms.json
         with open('data/rooms.json', 'w', encoding='utf-8') as file:
             json.dump(rooms_data, file, ensure_ascii=False, indent=4)
 
@@ -114,13 +134,15 @@ def book_room(room_name):
         return "Phòng không tồn tại!", 404
 
 
-
-# Route cho trang Đã đặt
 @app.route('/pay')
 def pay():
-    with open('data/booking_history.json', 'r', encoding='utf-8') as file:
-        book_rooms_data = json.load(file)
-    return render_template('layout/pay.html', booked_rooms=book_rooms_data)
+    with open('data/rooms.json', 'r', encoding='utf-8') as file:
+        rooms_data = json.load(file)
+
+    # Lọc ra các phòng có is_available = False
+    unavailable_rooms = [room for room in rooms_data if not room.get('is_available', True)]  # Sửa điều kiện ở đây
+    return render_template('layout/pay.html', booked_rooms=unavailable_rooms)
+
 
 # Đọc dữ liệu từ file JSON
 def read_json_file(file_path):
@@ -129,6 +151,7 @@ def read_json_file(file_path):
             return json.load(file)
     else:
         return []
+
 
 # Ghi dữ liệu vào file JSON
 def write_json_file(file_path, data):
@@ -139,52 +162,97 @@ def write_json_file(file_path, data):
 @app.route('/delete-selected-rooms', methods=['POST'])
 def delete_selected_rooms():
     data = request.get_json()
-    rooms = data.get('rooms', [])
+    print(data)  # In ra toàn bộ dữ liệu để kiểm tra
+    roomss = data.get('rooms', [])  # Lấy danh sách phòng từ 'rooms'
+    print(roomss)
+
+    # Lấy danh sách room_id từ các phòng đã chọn (chuyển sang kiểu số nếu cần)
+    rooms = [int(room['room_id']) for room in roomss]  # Chuyển room_id thành kiểu số nguyên
+    print(rooms)  # In ra danh sách room_id
 
     if not rooms:
         return jsonify({"status": "error", "message": "No rooms selected"})
 
     try:
-        # Đọc dữ liệu từ booking_history.json
-        with open('data/booking_history.json', 'r', encoding='utf-8') as file:
-            history_data = json.load(file)
+        # Đọc danh sách phòng từ rooms.json
+        with open('data/rooms.json', 'r', encoding='utf-8') as file:
+            rooms_data = json.load(file)
 
-        # Đọc dữ liệu từ rooms.json
-        with open('data/rooms.json', 'r', encoding='utf-8') as rooms_file:
-            room_data = json.load(rooms_file)
+        rooms_updated = 0  # Biến đếm số phòng đã được cập nhật
 
-        # Các bước xử lý phòng cần xóa
-        deleted_rooms = []
-        for room in rooms:
-            room_name = room.get('name')
+        # Duyệt qua danh sách phòng đã chọn và cập nhật trạng thái
+        for room_id in rooms:
+            room_to_update = None
+            for room in rooms_data:
+                # Chuyển room_id trong rooms_data thành kiểu số nguyên nếu cần
+                if room['room_id'] == room_id:
+                    room_to_update = room
+                    break
 
-            # Tìm phòng trong lịch sử booking
-            delete_room = next((r for r in history_data if r['name'] == room_name), None)
+            if room_to_update:
+                # Kiểm tra nếu phòng đang bị đặt (is_available == False) và cập nhật lại
+                if room_to_update['is_available'] == False:
+                    room_to_update['is_available'] = True
+                    rooms_updated += 1  # Tăng biến đếm
 
-            if delete_room:
-                # Thêm phòng vào danh sách đã xóa
-                deleted_rooms.append(delete_room)
-                # Xóa phòng khỏi booking_history.json
-                history_data = [r for r in history_data if r['name'] != room_name]
+        if rooms_updated > 0:
+            # Lưu lại dữ liệu đã thay đổi vào rooms.json
+            with open('data/rooms.json', 'w', encoding='utf-8') as file:
+                json.dump(rooms_data, file, ensure_ascii=False, indent=4)
 
-        # Nếu có phòng bị xóa, cập nhật file
-        if deleted_rooms:
-            # Cập nhật file rooms.json
-            room_data.extend(deleted_rooms)
-            with open('data/rooms.json', 'w', encoding='utf-8') as rooms_file:
-                json.dump(room_data, rooms_file, ensure_ascii=False, indent=4)
-
-            # Cập nhật file booking_history.json
-            with open('data/booking_history.json', 'w', encoding='utf-8') as file:
-                json.dump(history_data, file, ensure_ascii=False, indent=4)
-
-        return jsonify({
-            "status": "success",
-            "message": "Rooms deleted successfully",
-            "reload": True  # Chỉ thị yêu cầu tải lại trang
-        })
+            return jsonify({
+                "status": "success",
+                "message": f"{rooms_updated} rooms updated successfully",
+                "reload": True  # Chỉ thị yêu cầu tải lại trang
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "No rooms were updated"
+            })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+
+
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        # Lấy các phòng đã chọn từ request
+        selected_rooms = request.get_json().get('rooms', [])
+
+        line_items = []
+        total_amount = 0
+
+        for room_name in selected_rooms:
+            room = next((room for room in rooms if room['name'] == room_name), None)
+            if room:
+                room_price = room['price']
+                total_amount += room_price
+
+                line_items.append({
+                    'price_data': {
+                        'currency': 'vnd',
+                        'product_data': {
+                            'name': room['name'],  # Tên phòng
+                        },
+                        'unit_amount': int(room_price),  # Giá phòng tính theo VND (cents)
+                    },
+                    'quantity': 1,
+                })
+
+        # Tạo session thanh toán với Stripe
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url='http://localhost:5000/success',
+            cancel_url='http://localhost:5000/cancel',
+        )
+
+        return jsonify({'sessionId': session.id})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 
 @app.route("/logout")
@@ -198,8 +266,6 @@ def login_process():
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
-
-
 
         account = dao.auth_account(username=username, password=password)
         if account:
@@ -304,20 +370,24 @@ def common_response():
         'categories': dao.load_room()
     }
 
+
 # Route cho trang Khách sạn
 @app.route('/hotel')
 def hotel():
     return render_template('layout/hotel.html')
+
 
 # Route cho trang Cơ sở vật chất
 @app.route('/facilities')
 def facilities():
     return render_template('layout/facilities.html')
 
+
 # Route cho trang Liên hệ
 @app.route('/contact')
 def contact():
     return render_template('layout/contact.html')
+
 
 if __name__ == '__main__':
     from app import admin

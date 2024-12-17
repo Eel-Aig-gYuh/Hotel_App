@@ -56,16 +56,16 @@
             </div>
         </div>
         <div class="col-md-6">
-            <h4>{{ room_name }}</h4>
+            <h4>{{ room_type }} {{ room_name }}</h4>
             <p class="text-muted">
-                {{ room_note }}
+                {{ room_description }}
             </p>
             <ul class="list-unstyled">
-                <li>Loại phòng: {{room_level}}</li>
-                <li>Diện tích: {{area}}</li>
-                <li>Giường: {{bed}}</li>
-                <li>Phù hợp: {{people}}</li>
-                <li>Cửa sổ: {{view}}</li>
+                <li>Loại phòng: {{room_type}}</li>
+                <li>Diện tích:</li>
+                <li>Giường:</li>
+                <li>Phù hợp: {{capacity}}</li>
+                <li>Cửa sổ:</li>
             </ul>
             <div class="mb-3">
                 <label for="checkin" class="form-label">Ngày nhận //xử lý sau</label>
@@ -82,14 +82,14 @@
                     <option value="international">Khách quốc tế// xử lý sau</option>
                 </select>
             </div>
-            <p class="fw-bold">Giá: {{ "{:,.0f}".format(room_price).replace(',', '.') }} VND</p>
+            <p class="fw-bold">Giá: {{ "{:,.0f}".format(price_per_night).replace(',', '.') }} VND</p>
             <div class="d-flex justify-content-between">
                 <button class="btn btn-outline-primary black-btn">WiFi</button>
                 <button class="btn btn-outline-primary black-btn">Dọn phòng</button>
                 <button class="btn btn-outline-primary black-btn">Giặt giũ</button>
                 <button class="btn btn-outline-primary black-btn">Đưa đón</button>
             </div>
-            <a href="{{url_for('book_room', room_name=room_name)}}" class="w-100">
+            <a href="{{url_for('book_room', room_id=room_id)}}" class="w-100">
                 <button class="btn btn-primary mt-3 w-100">Đặt phòng</button>
             </a>
         </div>

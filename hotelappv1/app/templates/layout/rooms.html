@@ -38,35 +38,27 @@
 <!-- Display Rooms -->
 <div class="container mt-5">
     <h2 class="mb-4">Phòng nghỉ</h2>
-    <div class="row">
-        <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
+    <div class="row justify-content-center">
+        <div style="max-height: 1000px; overflow-y: auto;" class="room-container row">
             {% for room in rooms %}
-            <div class="col-md-6 mb-4">
+            <div class="col-md-3 col-sm-6 mb-4 d-flex justify-content-center">
                 <div class="card h-100">
-                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.name }}"
+                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.room_name }}"
                          style="max-height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <a href="{{ url_for('room_detail',
-                                room_name=room.name,
-                                room_note=room.note,
-                                room_level=room.level,
-                                room_price=room.price,
-                                area=room.area,
-                                bed=room.bed,
-                                people=room.people,
-                                view=room.view) }}">
-                                {{ room.name }}
+                            <a href="{{ url_for('room_detail',room_id=room.room_id)}}">
+                                {{room.room_type}} {{ room.room_name }}
                             </a>
                         </h5>
-                        <p class="card-text">{{ room.note }}</p>
-                        <p class="card-text fw-bold">Giá: {{ "{:,.0f}".format(room.price).replace(',', '.') }} VND</p>
-                        <p class="card-text">Loại phòng: {{ room.level }}</p>
+                        <p class="card-text">{{ room.room_description }}</p>
+                        <p class="card-text fw-bold">Giá: {{ "{:,.0f}".format(room.price_per_night).replace(',', '.') }} VND</p>
+                        <p class="card-text">Loại phòng: {{ room.room_type }}</p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-square"></i> {{ room.area }}</li>
-                            <li><i class="bi bi-bed"></i> {{ room.bed }}</li>
-                            <li><i class="bi bi-people"></i> {{ room.people }}</li>
-                            <li><i class="bi bi-eye"></i> {{ room.view }}</li>
+                            <li><i class="bi bi-square"></i> </li>
+                            <li><i class="bi bi-bed"></i> </li>
+                            <li><i class="bi bi-people"></i>Số người: {{room.capacity}} </li>
+                            <li><i class="bi bi-eye"></i> </li>
                         </ul>
                     </div>
                 </div>

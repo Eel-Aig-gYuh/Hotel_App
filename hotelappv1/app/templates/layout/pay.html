@@ -11,32 +11,44 @@
             <th scope="col">Loại phòng</th>
             <th scope="col">Ngày nhận</th>
             <th scope="col">Ngày trả</th>
-            <th scope="col">Trạng thái</th>
+            <th scope="col">Giá</th>
             <th scope="col">Phòng trống</th>
         </tr>
         </thead>
         <tbody>
-        {% set sum = 0 %}
         {% for room in booked_rooms %}
-        <tr data-price="{{ room.price }}">
-            <td><input type="checkbox" data-room-name="{{ room.name }}"></td>
-            <td>xử lý bằng csdl</td>
-            <td>{{room.level}}</td>
-            <td>xử lý bằng csdl</td>
-            <td>xử lý bằng csdl</td>
-            <td>Còn trống</td>
-            <td>xử lý bằng csdl</td>
-        </tr>
+        <tr data-price="{{ room.price_per_night }}">
+            <!-- Checkbox for each room -->
+            <td><input type="checkbox" data-room-id="{{ room.room_id }}" class="room-checkbox"></td>
 
+            <!-- Room number -->
+            <td>{{ room.room_name }}</td>
+
+            <!-- Room type -->
+            <td>{{ room.room_type }}</td>
+
+            <!-- Check-in and check-out times (hardcoded or dynamic depending on available data) -->
+            <td>{{ room.checkin_time }}</td>
+            <td>{{ room.checkout_time }}</td>
+
+            <!-- Price (formatted) -->
+            <td>{{ room.price_per_night }} VND</td>
+
+            <!-- Room availability (since rooms are booked, this should be false) -->
+            <td>Đã đặt</td>
+        </tr>
         {% endfor %}
         </tbody>
     </table>
 
+    <!-- Buttons for deletion, addition, and payment -->
     <div class="d-flex justify-content-end">
         <button class="btn btn-outline-danger btn-delete">Xóa</button>
-        <a href="{{url_for('rooms')}}"><button class="btn btn-outline-primary mx-2">Thêm</button></a>
-        <button class="btn btn-success">Thanh toán</button>
+        <a href="{{ url_for('rooms') }}"><button class="btn btn-outline-primary mx-2">Thêm</button></a>
+        <button class="btn btn-success btn-pay">Thanh toán</button>
     </div>
+
+    <!-- Display total amount -->
     <div class="d-flex justify-content-end mt-3">
         <h5>Tổng tiền: <span id="totalAmount">0 VND</span></h5>
     </div>

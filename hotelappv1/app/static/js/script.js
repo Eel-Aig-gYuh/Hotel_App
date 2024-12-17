@@ -3,10 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectAllBookedRooms = document.getElementById('selectAllBookedRooms');
     const bookedRoomCheckboxes = document.querySelectorAll('#bookedRoomsTable tbody tr td input[type="checkbox"]');
 
-    // Các checkbox của lịch sử thanh toán
-    const selectAllPaymentHistory = document.getElementById('selectAllPaymentHistory');
-    const paymentHistoryCheckboxes = document.querySelectorAll('#paymentHistoryTable tbody tr td input[type="checkbox"]');
-
     // Hiển thị tổng tiền
     const totalAmountDisplay = document.getElementById('totalAmount');
 
@@ -31,77 +27,100 @@ document.addEventListener('DOMContentLoaded', function() {
         totalAmountDisplay.textContent = total.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
     }
 
-    // Sự kiện cho checkbox tiêu đề "Tích tất cả" của danh sách phòng đã đặt
-    selectAllBookedRooms.addEventListener('change', function() {
-        toggleCheckboxes(bookedRoomCheckboxes, this.checked);
-    });
-
-
-    // Gán sự kiện cho mỗi checkbox trong danh sách phòng đã đặt
-    bookedRoomCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            // Nếu bỏ chọn một phòng thì bỏ chọn "Tích tất cả"
-            if (!this.checked) {
-                selectAllBookedRooms.checked = false;
+    // Hàm lấy danh sách các phòng đã chọn
+    function getSelectedRooms() {
+        const selectedRooms = [];
+        bookedRoomCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const roomId = checkbox.getAttribute('data-room-id');
+                console.log('Selected room ID:', roomId);  // Debugging line
+                selectedRooms.push({ room_id: roomId });
             }
-            // Cập nhật tổng tiền
-            calculateTotal();
         });
-    });
+        return selectedRooms;
+    }
 
-    // Gán sự kiện cho mỗi checkbox trong lịch sử thanh toán (thực hiện tính tổng tiền khi tích tất cả)
-    paymentHistoryCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            // Nếu bỏ chọn một phòng thì bỏ chọn "Tích tất cả"
-            if (!this.checked) {
-                selectAllPaymentHistory.checked = false;
-            }
-            // Cập nhật tổng tiền
-            calculateTotal();
-        });
-    });
 
-    //Sự kiện Xoá
-    document.querySelector('.btn-delete').addEventListener('click', function() {
-    console.log('Nút Xoá đã được nhấn');
-    const selectedRooms = [];
 
-    bookedRoomCheckboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            const roomName = checkbox.getAttribute('data-room-name');
-            selectedRooms.push({ name: roomName });
-        }
-    });
-
-    // Gửi thông tin phòng đã chọn tới server
-    if (selectedRooms.length > 0) {
-        console.log('Phòng đã chọn:', selectedRooms);
-        fetch('/delete-selected-rooms', {
+    // Hàm gửi yêu cầu lên server
+    function sendRequest(url, data) {
+        return fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ rooms: selectedRooms })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-        alert('Phòng đã được xóa thành công!');
-        if (data.reload) {
-            location.reload();  // Tải lại trang pay
-        }
-    } else {
-        alert('Có lỗi xảy ra: ' + data.message);
+            body: JSON.stringify(data)
+        }).then(response => response.json());
     }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    } else {
-        console.log('Không có phòng nào được chọn để xoá');
-    }
-});
 
-    // Tính tổng tiền ngay khi trang tải lần đầu (nếu cần)
+    // Sự kiện chọn tất cả cho danh sách phòng đã đặt
+    selectAllBookedRooms.addEventListener('change', function() {
+        toggleCheckboxes(bookedRoomCheckboxes, this.checked);
+    });
+
+    // Gán sự kiện cho mỗi checkbox trong danh sách phòng đã đặt
+    bookedRoomCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (!this.checked) {
+                selectAllBookedRooms.checked = false;
+            }
+            calculateTotal();
+        });
+    });
+
+    // Sự kiện Xoá
+    document.querySelector('.btn-delete').addEventListener('click', function() {
+        console.log('Nút Xoá đã được nhấn');
+        const selectedRooms = getSelectedRooms();
+
+        if (selectedRooms.length > 0) {
+            console.log('Phòng đã chọn:', JSON.stringify(selectedRooms, null, 2));
+            sendRequest('/delete-selected-rooms', { rooms: selectedRooms })
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Phòng đã được xóa thành công!');
+                        if (data.reload) {
+                            location.reload();
+                        }
+                    } else {
+                        alert('Có lỗi xảy ra: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi kết nối, vui lòng thử lại!');
+                });
+        } else {
+            console.log('Không có phòng nào được chọn để xoá');
+        }
+    });
+
+    // Sự kiện Thanh toán
+    document.querySelector('.btn-pay').addEventListener('click', function() {
+        console.log('Nút Thanh toán đã được nhấn');
+        const selectedRooms = getSelectedRooms();
+
+        if (selectedRooms.length > 0) {
+            console.log('Phòng đã chọn:', selectedRooms);
+            sendRequest('/create-checkout-session', { rooms: selectedRooms })
+                .then(data => {
+                    const stripe = Stripe('pk_test_your_publishable_key');  // Thay bằng Publishable Key thực tế
+                    return stripe.redirectToCheckout({ sessionId: data.sessionId });
+                })
+                .then(result => {
+                    if (result.error) {
+                        console.error('Error:', result.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra trong quá trình thanh toán!');
+                });
+        } else {
+            console.log('Không có phòng nào được chọn để Thanh toán');
+        }
+    });
+
+    // Tính tổng tiền ngay khi trang tải lần đầu
     calculateTotal();
 });

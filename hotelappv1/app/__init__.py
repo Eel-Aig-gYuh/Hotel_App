@@ -2,12 +2,12 @@ from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import quote
 from flask import Flask
 from flask_login import LoginManager
-import cloudinary
+import cloudinary, stripe
 
 
 app = Flask(__name__)
 
-
+stripe.api_key = "sk_test_YourSecretKeyHere"
 app.secret_key = 'GH33*1SD4P03M*0FTH3DR34MC1TY'
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/hoteldb?charset=utf8mb4" % quote('Admin@123')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
