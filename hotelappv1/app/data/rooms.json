@@ -12,7 +12,7 @@
         "room_description": "Cozy room with essential amenities for a comfortable stay.",
         "price_per_night": 525000.0,
         "capacity": 1,
-        "is_available": true,
+        "is_available": false,
         "image": "https://via.placeholder.com/150"
     },
     {
@@ -44,7 +44,7 @@
         "room_description": "Cozy room with essential amenities for a comfortable stay.",
         "price_per_night": 525000.0,
         "capacity": 1,
-        "is_available": true,
+        "is_available": false,
         "image": "https://via.placeholder.com/150"
     },
     {

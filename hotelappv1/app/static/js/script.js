@@ -99,25 +99,27 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.btn-pay').addEventListener('click', function() {
         console.log('Nút Thanh toán đã được nhấn');
         const selectedRooms = getSelectedRooms();
-
+        const stripe = Stripe('pk_test_51QXAxiFyHL0Twlggl7sNXjDnaxX3RYY9XLJEvGaknQ6wPNuyMIMeZ20XpIbc4HhzDTkG5f9GDhEbdmvkRh2ifC8300x6aTawDW');
         if (selectedRooms.length > 0) {
             console.log('Phòng đã chọn:', selectedRooms);
-            sendRequest('/create-checkout-session', { rooms: selectedRooms })
-                .then(data => {
-                    const stripe = Stripe('pk_test_your_publishable_key');  // Thay bằng Publishable Key thực tế
-                    return stripe.redirectToCheckout({ sessionId: data.sessionId });
-                })
-                .then(result => {
-                    if (result.error) {
-                        console.error('Error:', result.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Có lỗi xảy ra trong quá trình thanh toán!');
-                });
+            fetch('/create-checkout-session', {
+                method: 'POST',
+            headers: {
+        'Content-Type': 'application/json',
+        },
+    body: JSON.stringify({ rooms: selectedRooms }), // Danh sách phòng được chọn
+})
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.error) {
+            console.error('Error creating checkout session:', data.error);
         } else {
-            console.log('Không có phòng nào được chọn để Thanh toán');
+            const sessionId = data.sessionId;
+            return stripe.redirectToCheckout({ sessionId: sessionId });
+        }
+    })
+    .catch((error) => console.error('Error:', error));
+
         }
     });
 

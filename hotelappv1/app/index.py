@@ -7,6 +7,7 @@ from app import dao, login, app
 from flask_login import login_user, logout_user, current_user
 from models import UserRole, Room, RoomStyle, RoomStatus, db
 from sqlalchemy.orm import joinedload
+from urllib.parse import urlencode
 
 
 @app.route("/")
@@ -214,45 +215,124 @@ def delete_selected_rooms():
         return jsonify({"status": "error", "message": str(e)})
 
 
+# @app.route('/create-checkout-session', methods=['POST'])
+# def create_checkout_session():
+#     try:
+#         # Lấy dữ liệu phòng từ request
+#         data = request.get_json()
+#         selected_rooms = data.get('rooms', [])
+#
+#         # Đọc dữ liệu phòng từ JSON
+#         with open('data/rooms.json', 'r', encoding='utf-8') as file:
+#             rooms_data = json.load(file)
+#
+#         # Lọc phòng đã chọn
+#         selected_room_details = [
+#             room for room in rooms_data if str(room['room_id']) in [r['room_id'] for r in selected_rooms]
+#         ]
+#
+#         # Tạo line_items cho Stripe
+#         line_items = []
+#         for room in selected_room_details:
+#             line_items.append({
+#                 'price_data': {
+#                     'currency': 'vnd',
+#                     'product_data': {
+#                         'name': f"Phòng {room['room_name']}",
+#                         'description': f"Loại phòng: {room['room_type']}, Giá: {room['price_per_night']} VND",
+#                     },
+#                     'unit_amount': int(room['price_per_night']),  # Đảm bảo là số nguyên
+#                 },
+#                 'quantity': 1,
+#             })
+#
+#
+#         # Tạo session thanh toán với Stripe
+#         session = stripe.checkout.Session.create(
+#             payment_method_types=['card'],
+#             line_items=line_items,
+#             mode='payment',
+#             # success_url='http://localhost:5000/success',
+#             # cancel_url='http://localhost:5000/cancel',
+#             success_url=url_for('payment_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+#             cancel_url = url_for('payment_cancel', _external=True)
+#         )
+#
+#         return jsonify({'sessionId': session.id})
+#
+#     except Exception as e:
+#         print(f"Error: {str(e)}")
+#         return jsonify({'error': str(e)}), 400
+
 @app.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     try:
-        # Lấy các phòng đã chọn từ request
-        selected_rooms = request.get_json().get('rooms', [])
+        # Lấy dữ liệu phòng từ request
+        data = request.get_json()
+        selected_rooms = data.get('rooms', [])
 
+        # Đọc dữ liệu phòng từ JSON
+        with open('data/rooms.json', 'r', encoding='utf-8') as file:
+            rooms_data = json.load(file)
+
+        # Lọc phòng đã chọn
+        selected_room_details = [
+            room for room in rooms_data if str(room['room_id']) in [r['room_id'] for r in selected_rooms]
+        ]
+
+        # Tạo line_items cho Stripe
         line_items = []
-        total_amount = 0
-
-        for room_name in selected_rooms:
-            room = next((room for room in rooms if room['name'] == room_name), None)
-            if room:
-                room_price = room['price']
-                total_amount += room_price
-
-                line_items.append({
-                    'price_data': {
-                        'currency': 'vnd',
-                        'product_data': {
-                            'name': room['name'],  # Tên phòng
-                        },
-                        'unit_amount': int(room_price),  # Giá phòng tính theo VND (cents)
+        for room in selected_room_details:
+            line_items.append({
+                'price_data': {
+                    'currency': 'vnd',
+                    'product_data': {
+                        'name': f"Phòng {room['room_name']}",
+                        'description': f"Loại phòng: {room['room_type']}, Giá: {room['price_per_night']} VND",
                     },
-                    'quantity': 1,
-                })
+                    'unit_amount': int(room['price_per_night']),  # Đảm bảo là số nguyên
+                },
+                'quantity': 1,
+            })
+
+        # Chuẩn bị thông tin phòng cho success_url (chuyển qua query parameters)
+        room_ids = [room['room_id'] for room in selected_room_details]
+        room_names = [room['room_name'] for room in selected_room_details]
+
+        # Tạo query string cho success_url
+        query_params = urlencode({
+            'room_ids': ','.join(map(str, room_ids)),  # Chuyển các room_id thành chuỗi
+            'room_names': ','.join(room_names),  # Chuyển các room_name thành chuỗi
+        })
 
         # Tạo session thanh toán với Stripe
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url='http://localhost:5000/success',
-            cancel_url='http://localhost:5000/cancel',
+            success_url=url_for('payment_success', _external=True) + '?' + query_params,
+            cancel_url=url_for('pay', _external=True)
         )
 
         return jsonify({'sessionId': session.id})
 
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 400
+
+
+@app.route('/payment-success')
+def payment_success():
+    # Lấy thông tin phòng từ query parameters
+    room_ids = request.args.get('room_ids', '')
+    room_names = request.args.get('room_names', '')
+
+    # Chuyển đổi room_ids và room_names thành danh sách
+    room_ids_list = room_ids.split(',')
+    room_names_list = room_names.split(',')
+
+    # Xử lý tiếp với thông tin phòng
+    return f"Thanh toán thành công cho các phòng: {', '.join(room_names_list)} (ID: {', '.join(room_ids_list)})"
 
 
 @app.route("/logout")
