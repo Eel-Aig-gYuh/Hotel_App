@@ -7,7 +7,7 @@
         </div>
         <!-- Logo ở giữa -->
         <div class="d-flex justify-content-center">
-            <a href="#">
+            <a href="/">
                 <img src="https://via.placeholder.com/40" alt="Logo"> <!-- Thay bằng logo -->
             </a>
         </div>
@@ -30,13 +30,50 @@
 <!-- Tabs -->
 <div class="container mt-3">
     <ul class="navbar-nav d-flex justify-content-center flex-row">
-        {% for hotel in hotels %}
         <li class="nav-item mx-3"><a class="nav-link" href="/">Trang chủ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/hotel">Khách sạn</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/rooms">Phòng nghỉ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/facilities">Cơ sở vật chất</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/contact">Liên hệ</a></li>
-        <li class="nav-item mx-3"><a class="nav-link" href="/pay">Đã đặt</a></li>
-        {% endfor %}
+        <li class="nav-item mx-3"><a class="nav-link" href="/pay"> Đã đặt &#128722; <span class="badge bg-danger cart-counter"> {{cart_stats.total_quantity}} </span></a></li>
     </ul>
+</div>
+
+<!-- Room Search -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <form class="row g-3" action="{{url_for('search_process')}}" method="get" enctype="multipart/form-data">
+                <div class="col-md-2">
+                    <select class="form-select" name="room_style" aria-label="Chọn loại phòng">
+                        <option selected value="">Phòng</option>
+                        <option value="BINH_THUONG">Phòng Bình Thường</option>
+                        <option value="GIA_DINH">Phòng Gia Đình</option>
+                        <option value="DOANH_NHAN">Phòng Doanh Nhân</option>
+                        <option value="VIP">Phòng VIP</option>
+                    </select>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        setDefaultDates('checkin_date', 'checkout_date');
+                    });
+                </script>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" name="check_in" id="checkin_date" placeholder="Ngày đến">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" name="check_out" id="checkout_date" placeholder="Ngày đi">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" name="adults" placeholder="Người lớn: 1" min="0">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" name="children" placeholder="Trẻ em: 0" min="0">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100" >Kiểm tra phòng</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

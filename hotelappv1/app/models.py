@@ -55,10 +55,11 @@ class Staff(Profile):
 
     salary = Column(DECIMAL(18,2), nullable=True, default=0.0)
 
-    # relationship with user_staff (one - to - one)
-    user = relationship('User', backref='staff_user', lazy=True)
     # relationship with hotel_staff (many - to - one)
     hotel_id = Column(Integer, ForeignKey('hotel.id'), nullable=False)
+
+    # relationship with user_staff (one - to - one)
+    user = relationship('User', backref='staff_user', lazy=True)
 
     def __str__(self):
         return self.first_name
@@ -141,9 +142,9 @@ class Room(db.Model):
 
     # relationship with room_room_type (many - to - one)
     room_type_id = Column(Integer, ForeignKey('room_type.id'), nullable=False)
-
     # relationship with hotel_room (many - to - one)
     hotel_id = Column(Integer, ForeignKey('hotel.id'), nullable=False)
+
     # relationship with booking_room (many - to - one)
     bookings = relationship('Booking', backref='room_booking', lazy=True)
 
@@ -165,7 +166,6 @@ class RoomType(db.Model):
     rooms = relationship('Room', backref='room_room_type', lazy=True)
     # relationship comment_room_type ( many - to - one)
     comments = relationship('Comment', backref='cmt_room_type', lazy=True)
-
     # relationship with room_type_service (many - to - many)
     services = relationship('Service',
                               secondary='room_service',
@@ -224,8 +224,9 @@ class Booking(db.Model, TimestampMixin):
     customer_id = Column(Integer, ForeignKey('customer.id'), nullable=False)
     # relationship with booking_room (many - to - one)
     room_id = Column(Integer, ForeignKey('room.id'), nullable=False)
-    # relationship with bill_booking (many - to - one)
-    bills = relationship('Bill', backref='booking_bill', lazy=True)
+
+    # relationship with bill_detail_booking (many - to - one)
+    bills = relationship('BillDetail', backref='booking_bill', lazy=True)
 
     def __str__(self):
         return self.id
@@ -240,10 +241,9 @@ class Bill(db.Model, TimestampMixin):
 
     # relationship with bill_customer (many - to - one)
     customer_id = Column(Integer, ForeignKey('customer.id'), nullable=False)
-    # relationship with bill_booking (many - to - one)
-    booking_id = Column(Integer, ForeignKey('booking.id'), nullable=False)
-    # relationship with bill_bill_detail (one - to - one)
-    detail = relationship('BillDetail', backref='bill_details', lazy=True)
+
+    # relationship with bill_bill_detail (many - to - one)
+    details = relationship('BillDetail', backref='bill_bill_detail', lazy=True)
 
     def __str__(self):
         return self.id
@@ -252,11 +252,16 @@ class Bill(db.Model, TimestampMixin):
 class BillDetail(db.Model):
     __tablename__ = "bill_detail"
 
-    id = Column(Integer, ForeignKey('bill.id'), primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     amount = Column(Integer, nullable=False)
     unit_price = Column(DECIMAL(18, 2), nullable=False)
-    num_foreign_customer = Column(Integer, nullable=False)
-    num_local_customer = Column(Integer, nullable=False)
+    num_foreign_customer = Column(Integer, nullable=True)
+    num_local_customer = Column(Integer, nullable=True)
+
+    # relationship with bill_bill_detail (many - to - one)
+    bill_id = Column(Integer, ForeignKey('bill.id'), nullable=False)
+    # relationship with booking_bill_detail
+    booking_id = Column(Integer, ForeignKey('booking.id'), nullable=False)
 
     def __str__(self):
         return self.id

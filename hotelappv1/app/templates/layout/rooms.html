@@ -1,64 +1,41 @@
 {% extends 'layout/base.html' %}
 
 {% block content %}
-<!-- Room Search -->
-<div class="container mt-4">
-    <div class="row">
-        <div class="col">
-            <form class="row g-3" action="{{url_for('room_process')}}" method="get" enctype="multipart/form-data">
-                <div class="col-md-2">
-                    <select class="form-select" name="room_style" aria-label="Chọn loại phòng">
-                        <option selected value="">Phòng</option>
-                        <option value="BINH_THUONG">Phòng Bình Thường</option>
-                        <option value="GIA_DINH">Phòng Gia Đình</option>
-                        <option value="DOANH_NHAN">Phòng Doanh Nhân</option>
-                        <option value="VIP">Phòng VIP</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <input type="date" class="form-control" name="check_in" placeholder="Ngày đến">
-                </div>
-                <div class="col-md-2">
-                    <input type="date" class="form-control" name="check_out" placeholder="Ngày đi">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control" name="adults" value="1" placeholder="Người lớn" min="0">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control" name="children" value="0" placeholder="Trẻ em" min="0">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Kiểm tra phòng</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- Display Rooms -->
 <div class="container mt-5">
     <h2 class="mb-4">Phòng nghỉ</h2>
-    <div class="row">
-        <div style="max-height: 500px; overflow-y: auto;" class="room-container row">
-            {% for room in rooms %}
-            <div class="col-md-6 mb-4">
+    <div class="row justify-content-center">
+        <div style="max-height:  1000px; overflow-y: auto;" class="room-container row">
+            {% if no_rooms_message %}
+                 <label class="text-danger">{{ no_rooms_message }}</label>
+            {% endif %}
+            {% for room, room_type in rooms %}
+            <div class="col-md-3 col-sm-6 mb-4 d-flex justify-content-center">
                 <div class="card h-100">
-                    <img src="{{room.images[0].uri}}" class="card-img-top" alt="{{ room.name }}"
+                    <img src="{{room_type.images[1].uri}}" class="card-img-top" alt="{{ room.name }}"
                          style="max-height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <a href="{{url_for('room_process')}}">
-                                {{ room.name }}
+                            <a href="{{url_for('room_detail',
+                                                room_id=room.id,
+                                                room_name=room.name,
+                                                room_style=room_type.name,
+                                                checkin=checkin,
+                                                checkout=checkout,
+                                                room_price=room_type.price_per_night,
+                                                room_capacity=room_type.capacity,
+                                                ) }}">
+                                Phòng {{ ROOM_TYPE_LABELS.get(room_type.name.value) }} {{room.name}}
                             </a>
                         </h5>
                         <p class="card-text"></p>
-                        <p class="card-text fw-bold">Giá: {{room.price_per_night}} VND</p>
-                        <p class="card-text">Miêu tả: {{ room.description }}</p>
+                        <p class="card-text fw-bold">Giá: {{ "{:,.0f}".format(room_type.price_per_night).replace(',', '.') }} VND</p>
+                        <p class="card-text">Miêu tả: {{ room_type.description }}</p>
+                        <p class="card-text">Loại phòng: {{ROOM_TYPE_LABELS.get(room_type.name.value, room_type.name.value)}}</p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-square"></i> </li>
-                            <li><i class="bi bi-bed"></i> </li>
-                            <li><i class="bi bi-people"></i>  {{room.capacity}} </li>
-                            <li><i class="bi bi-eye"></i> </li>
+                            <li><i class="bi bi-bed"></i> 🛏️ {{BED_TYPE_LABELS.get(room_type.capacity)}}  </li>
+                            <li><i class="bi bi-people mr-2"></i> &#128101; {{room_type.capacity}} Người lớn </li>
                         </ul>
                     </div>
                 </div>

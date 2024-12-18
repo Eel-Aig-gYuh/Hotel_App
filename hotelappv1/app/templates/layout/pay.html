@@ -3,42 +3,57 @@
 <div class="container mt-5">
     <!-- Danh sách phòng đã đặt -->
     <h4>Danh sách phòng đã đặt</h4>
-    <table class="table table-striped" id="bookedRoomsTable">
-        <thead>
-        <tr>
-            <th scope="col"><input type="checkbox" id="selectAllBookedRooms"></th>
-            <th scope="col">Số phòng</th>
-            <th scope="col">Loại phòng</th>
-            <th scope="col">Ngày nhận</th>
-            <th scope="col">Ngày trả</th>
-            <th scope="col">Trạng thái</th>
-            <th scope="col">Phòng trống</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% set sum = 0 %}
-        {% for room in booked_rooms %}
-        <tr data-price="{{ room.price }}">
-            <td><input type="checkbox" data-room-name="{{ room.name }}"></td>
-            <td>xử lý bằng csdl</td>
-            <td>{{room.level}}</td>
-            <td>xử lý bằng csdl</td>
-            <td>xử lý bằng csdl</td>
-            <td>Còn trống</td>
-            <td>xử lý bằng csdl</td>
-        </tr>
+    {% if 'cart' in session %}
+        <table class="table table-striped" id="bookedRoomsTable">
+            <thead>
+            <tr>
+                <th scope="col"><input type="checkbox" id="selectAllBookedRooms"></th>
+                <th scope="col">Số phòng</th>
+                <th scope="col">Loại phòng</th>
+                <th scope="col">Ngày nhận</th>
+                <th scope="col">Ngày trả</th>
+                <th scope="col">Đơn giá</th>
+                <th scope="col">Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% set sum = 0 %}
+            {% for room in session['cart'].values() %}
+            <tr data-price="{{ room.room_type_price_per_night }}" id="cart{{room.room_id}}">
+                <td><input type="checkbox" data-room-name="{{ room.name }}"></td>
+                <td>{{ room.room_name }}</td>
+                <td>{{ ROOM_TYPE_LABELS.get(room.room_type_name) }}</td>
+                <td>{{ room.checkin_date}}</td>
+                <td>{{ room.checkout_date}}</td>
+                <td>{{ "{:,.0f}".format(room.room_type_price_per_night).replace(',', '.') }} VND </td>
+                <td></td>
+                <td>
+                    <button class="btn btn-outline-danger" onclick="deleteCart({{room.room_id}})">&times;</button>
+                </td>
+            </tr>
 
-        {% endfor %}
-        </tbody>
-    </table>
+            {% endfor %}
+            </tbody>
+        </table>
 
-    <div class="d-flex justify-content-end">
-        <button class="btn btn-outline-danger btn-delete">Xóa</button>
-        <a href="{{url_for('rooms')}}"><button class="btn btn-outline-primary mx-2">Thêm</button></a>
-        <button class="btn btn-success">Thanh toán</button>
-    </div>
-    <div class="d-flex justify-content-end mt-3">
-        <h5>Tổng tiền: <span id="totalAmount">0 VND</span></h5>
-    </div>
+
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-outline-danger btn-delete">Xóa</button>
+            <a href="{{ url_for('room_process') }}"><button class="btn btn-outline-primary mx-2">Bạn muốn đặt thêm</button></a>
+            {% if current_user.is_authenticated %}
+                <button class="btn btn-success">Thanh toán</button>
+            {% else %}
+                <a href="/login?next={{url_for('pay_process')}}"><button class="btn btn-success">Vui lòng đăng nhập để tiến hành thanh toán</button></a>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+            <h5>Tổng tiền: <span id="totalAmount">0 VND</span></h5>
+        </div>
+
 </div>
+    {% else %}
+        <div class="alert alert-info mt-1">Không có sản phẩm trong giỏ !</div>
+    {% endif %}
+
 {% endblock %}

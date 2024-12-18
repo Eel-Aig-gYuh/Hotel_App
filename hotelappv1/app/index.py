@@ -1,20 +1,27 @@
+import datetime
 import math
 import json
-import os
-from flask import render_template, request, redirect, session, url_for, jsonify
+
+from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from app import dao, login, app
 from flask_login import login_user, logout_user
+from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS
+from utils import cart_stats, format_date
 
 
 @app.context_processor
 def common_response():
     return {
-        'room': dao.load_room()
+        'room': dao.load_room(),
+        'room_type': dao.load_room_type(),
+        'cart_stats': cart_stats(session.get('cart'))
     }
+
 
 @login.user_loader
 def load_account(user_id):
     return dao.get_user_by_id(int(user_id))
+
 
 # =================== trang chu ===================
 @app.route("/")
@@ -31,6 +38,7 @@ def logout_process():
     logout_user()
     return redirect(url_for('index'))
 
+
 @app.route("/login", methods=['get', 'post'])
 def login_process():
     if request.method.__eq__('POST'):
@@ -41,7 +49,8 @@ def login_process():
 
         if account:
             login_user(account)
-            return redirect(url_for('index'))
+            next = request.args.get('next')
+            return redirect(url_for('index') if next is None else next)
 
     return render_template('layout/login.html')
 
@@ -56,6 +65,7 @@ def login_admin_process():
         login_user(user=account)
 
     return redirect('/admin')
+
 
 @app.route('/register_user', methods=['get', 'post'])
 def register_user():
@@ -78,7 +88,8 @@ def register_user():
                     'phone': phone,
                 }
 
-                return redirect(url_for('register_account'))  # Chuyển đến trang đăng ký tài khoản sau khi thêm thành công
+                return redirect(
+                    url_for('register_account'))  # Chuyển đến trang đăng ký tài khoản sau khi thêm thành công
             except Exception as e:
                 err_msg = f"Đã có lỗi xảy ra: {e}"
         else:
@@ -119,10 +130,10 @@ def register_account():
 
 
 # =============== phong nghi ===============
-@app.route('/rooms', methods=['get', 'post'])
-def room_process():
+@app.route('/rooms/search_room', methods=['get', 'post'])
+def search_process():
     kw = request.args.get('kw')
-    room_id = request.args.get('id')
+    room_id = request.args.get('room_type')
     page = request.args.get('page', 1)
     page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
     total = dao.count_rooms()
@@ -133,115 +144,182 @@ def room_process():
     adults = request.args.get('adults')  # Người lớn
     children = request.args.get('children')  # Trẻ em
 
-    print(room_style)
+    if not check_in or not check_out:
+        flash("Please provide both check-in and check-out dates.", "warning")
+        return redirect(url_for('room_process'))
 
-    room = dao.load_room(room_id=room_id, room_style=room_style, adult=adults, children=children, check_in=check_in, check_out=check_out, page=page)
+    checkin_date = format_date(check_in)
+    checkout_date = format_date(check_out)
+
+    if check_in >= check_out:
+        flash("Check-out date must be after check-in date.", "warning")
+        return redirect(url_for('room_process'))
+
+    room = dao.load_room(room_id=room_id,
+                         room_style=room_style, adult=adults, children=children, check_in=checkin_date,
+                         check_out=checkout_date, page=page)
 
     # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
-    if not room:
-        no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
-    else:
+    if room:
         no_rooms_message = None
+        try:
+            session['search_state'] = {
+                'room_style': room_style,
+                'check_in': check_in,
+                'check_out': check_out,
+                'adults': adults,
+                'children': children,
+            }
+        except Exception as e:
+            err_msg = f"Đã có lỗi xảy ra: {e}"
+    else:
+        no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
 
-    return render_template('layout/rooms.html', rooms=room, pages=math.ceil(total / page_size))
-
-# @app.route('/search_rooms', methods=['GET', 'POST'])
-# def search_rooms():
-#     # Lấy dữ liệu từ form
-#     room_style = request.args.get('room_style')  # Phòng
-#     check_in = request.args.get('check_in')      # Ngày đến
-#     check_out = request.args.get('check_out')    # Ngày đi
-#     adults = request.args.get('adults')          # Người lớn
-#     children = request.args.get('children')      # Trẻ em
-#
-#     # Tạo query lọc
-#     # query = Room.query.options(joinedload(Room.beds), joinedload(Room.images))
-#
-#     # Lọc trạng thái phòng
-#     # query = query.filter(Room.room_status == RoomStatus.CON_TRONG)
-#
-#     # Lọc loại phòng
-#     # if room_style and room_style != "Phòng":
-#     #     query = query.filter(Room.room_style == RoomStyle[room_style])
-#     print (room_style)
-#
-#     # Thực hiện truy vấn
-#     rooms = dao.load_room()
-#
-#     # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
-#     if not rooms:
-#         no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
-#     else:
-#         no_rooms_message = None
-#
-#     return render_template('layout/rooms.html', rooms=rooms, no_rooms_message=no_rooms_message)
+    return render_template('layout/rooms.html',
+                           rooms=room, pages=math.ceil(total / page_size),
+                           checkin=checkin_date, checkout=checkout_date,
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
+                           BED_TYPE_LABELS=BED_TYPE_LABELS,
+                           no_rooms_message=no_rooms_message)
 
 
-@app.route('/room_detail/<string:room_name>/<string:room_note>/<string:room_level>/<int:room_price>/<string:area>/<string:bed>/<string:people>/<string:view>')
-def room_detail(room_name, room_note, room_level, room_price, area, bed, people, view):
+@app.route('/rooms', methods=['get', 'post'])
+def room_process():
+    kw = request.args.get('kw')
+    room_id = request.args.get('room_type')
+    page = request.args.get('page', 1)
+    page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
+    total = dao.count_rooms()
+
+    check_in = request.form.get('check_in', datetime.datetime.now())
+    check_out = request.form.get('check_out', (datetime.datetime.now() + datetime.timedelta(days=1)))
+
+    cart = session.get('cart')
+    print(cart)
+
+    # room = dao.load_room_type(room_id=room_id, check_in=check_in, check_out=check_out, page=page)
+    room = dao.load_room(kw=kw, room_id=room_id, room_in_cart=cart, page=1)
+
+    # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
+    if room:
+        no_rooms_message = None
+    else:
+        no_rooms_message = "Không có phòng phù hợp với yêu cầu tìm kiếm của bạn."
+
+    return render_template('layout/rooms.html',
+                           rooms=room, pages=math.ceil(total / page_size),
+                           checkin=check_in if check_in else "checkin",
+                           checkout=check_out if check_out else "checkout",
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
+                           BED_TYPE_LABELS=BED_TYPE_LABELS,
+                           no_rooms_message=no_rooms_message)
+
+
+@app.route(
+    '/rooms/room_detail/<int:room_id>/<string:room_name>/<string:room_style>/<int:room_price>/<int:room_capacity>/<checkin>/<checkout>',
+    methods=['get'])
+def room_detail(room_id, room_name, room_style, room_price, room_capacity, checkin, checkout):
     # Xử lý dữ liệu và trả về trang chi tiết phòng
+    room = dao.get_room_by_id(room_id)
+
+    room_available = dao.load_room(room_id=room.id)
+
+    _, room_type = room_available[0]
+
+    # print(room.id)
+    # print(room_available)
+    # print(room_type.name)
+
     return render_template('layout/room_detail.html',
-                           room_name=room_name,
-                           room_note=room_note,
-                           room_level=room_level,
-                           room_price=room_price,
-                           area=area,
-                           bed=bed,
-                           people=people,
-                           view=view)
+                           room_id=room.id,
+                           room_name=room.name,
+                           room_style=room_type.name,
+                           room_available=room_available,
+                           room_price=room_type.price_per_night,
+                           room_capacity=room_type.capacity,
+                           checkin=checkin,
+                           checkout=checkout,
+                           images=room_type.images,
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
+                           BED_TYPE_LABELS=BED_TYPE_LABELS,
+                           AREA_LABELS=AREA_LABELS)
+
 
 # Route xử lý đặt phòng
 @app.route('/book_room/<string:room_name>')
 def book_room(room_name):
-    # Đọc danh sách phòng từ rooms.json
-    with open('data/rooms.json', 'r', encoding='utf-8') as file:
-        rooms_data = json.load(file)
-
-    # Tìm phòng được đặt
-    room_to_book = None
-    for room in rooms_data:
-        if room['name'] == room_name:
-            room_to_book = room
-            break
-
-    if room_to_book:
-        # Ghi vào booking_history.json
-        try:
-            with open('data/booking_history.json', 'r', encoding='utf-8') as history_file:
-                booking_history = json.load(history_file)
-        except FileNotFoundError:
-            booking_history = []
-
-        booking_history.append(room_to_book)
-
-        # Xóa phòng khỏi rooms.json
-        rooms_data = [room for room in rooms_data if room['name'] != room_name]
-
-
-        return redirect(url_for('rooms'))
-    else:
-        return "Phòng không tồn tại!", 404
-
+    return redirect(url_for('room_process'))
 
 
 # Route cho trang Đã đặt
-@app.route('/pay')
-def pay():
-    with open('data/booking_history.json', 'r', encoding='utf-8') as file:
-        book_rooms_data = json.load(file)
-    return render_template('layout/pay.html', booked_rooms=book_rooms_data)
+@app.route('/api/carts', methods=['post'])
+def add_to_cart():
+    # lấy giỏ trong session.
+    cart = session.get('cart')
 
-# Đọc dữ liệu từ file JSON
-def read_json_file(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return json.load(file)
+    if not cart:
+        cart = {}
+
+    room_id = str(request.json.get('room_id'))
+    room_name = request.json.get('room_name')
+    room_type_name = request.json.get('room_type_name')
+    room_type_price_per_night = request.json.get('room_type_price_per_night')
+    room_type_capacity = request.json.get('room_type_capacity')
+    checkin_date = request.json.get('checkin_date')
+    checkout_date = request.json.get('checkout_date')
+    is_foreign = request.json.get('is_foreign')
+
+    if room_id in cart:
+        cart[room_id]['quantity'] = int(cart[room_id]['quantity']) + 1
     else:
-        return []
+        cart[room_id] = {
+            "room_id": room_id,
+            "room_name": room_name,
+            "room_type_name": room_type_name,
+            "room_type_price_per_night": room_type_price_per_night,
+            "room_type_capacity": room_type_capacity,
+            "checkin_date": checkin_date,
+            "checkout_date": checkout_date,
+            "is_foreign": 1,
+            "quantity": 1
+        }
 
-# Ghi dữ liệu vào file JSON
-def write_json_file(file_path, data):
-    pass
+    session['cart'] = cart
+
+    return jsonify(
+        cart_stats(cart)
+    )
+
+
+@app.route('/pay')
+def pay_process():
+    return render_template('layout/pay.html', ROOM_TYPE_LABELS=ROOM_TYPE_LABELS)
+
+
+@app.route('/api/carts/<room_id>', methods=['delete'])
+def delete_cart(room_id):
+    cart = session.get('cart')
+    if cart and room_id in cart:
+        # muốn thay đổi gì ở đây cũng được, trong session.
+        del cart[room_id]
+
+    session['cart']=cart
+
+    return jsonify(cart_stats(cart))
+
+
+@app.route('/api/carts/<room_id>', methods=['put'])
+def update_cart(room_id):
+    quantity = request.json.get('quantity', 0)
+
+    cart = session.get('cart')
+    if cart and room_id in cart:
+        # muốn thay đổi gì ở đây cũng được, trong session.
+        cart[room_id]['quantity'] = int(quantity)
+
+    session['cart'] = cart
+
+    return jsonify(cart_stats(cart))
 
 
 @app.route('/delete-selected-rooms', methods=['POST'])
@@ -292,10 +370,10 @@ def delete_selected_rooms():
 # Route cho trang Khách sạn
 @app.route('/hotel')
 def hotel_process():
-
     hotel = dao.load_hotel()
 
     return render_template('layout/hotel.html', hotels=hotel)
+
 
 # Route cho trang Cơ sở vật chất
 @app.route('/facilities')
@@ -305,10 +383,12 @@ def facilities():
 
     return render_template('layout/facilities.html', services=service, images=img_service)
 
+
 # Route cho trang Liên hệ
 @app.route('/contact')
 def contact():
     return render_template('layout/contact.html')
+
 
 if __name__ == '__main__':
     from app import admin
