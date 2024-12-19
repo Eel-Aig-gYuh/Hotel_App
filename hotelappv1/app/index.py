@@ -1,13 +1,14 @@
 import datetime
 import math
 import json
+import stripe
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
-from app import dao, login, app
-from flask_login import login_user, logout_user
+from app import dao, login, app, db
+from flask_login import login_user, logout_user, current_user
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS
 from utils import cart_stats, format_date
-
+from models import Bill, BillDetail, Booking, PaidMethod, RoomType, Room
 
 @app.context_processor
 def common_response():
@@ -138,6 +139,7 @@ def search_process():
     page_size = app.config.get('PAGE_SIZE', app.config['PAGE_SIZE'])
     total = dao.count_rooms()
 
+    cart = session.get('cart')
     room_style = request.args.get('room_style')  # Phòng
     check_in = request.args.get('check_in')  # Ngày đến
     check_out = request.args.get('check_out')  # Ngày đi
@@ -157,7 +159,7 @@ def search_process():
 
     room = dao.load_room(room_id=room_id,
                          room_style=room_style, adult=adults, children=children, check_in=checkin_date,
-                         check_out=checkout_date, page=page)
+                         check_out=checkout_date, page=page, room_in_cart=cart)
 
     # Kiểm tra nếu không có phòng nào thỏa mãn điều kiện
     if room:
@@ -295,6 +297,18 @@ def add_to_cart():
 def pay_process():
     return render_template('layout/pay.html', ROOM_TYPE_LABELS=ROOM_TYPE_LABELS)
 
+@app.route('/payment-success')
+def payment_success():
+    # Lấy thông tin phòng từ query parameters
+    room_id = request.args.get('room_id', '')
+    room_name = request.args.get('room_name', '')
+
+    # Chuyển đổi room_ids và room_names thành danh sách
+    room_id_list = room_id.split(',')
+    room_name_list = room_name.split(',')
+
+    # Xử lý tiếp với thông tin phòng
+    return f"Thanh toán thành công cho các phòng: {', '.join(room_name_list)} (ID: {', '.join(room_id_list)})"
 
 @app.route('/api/carts/<room_id>', methods=['delete'])
 def delete_cart(room_id):
@@ -302,11 +316,9 @@ def delete_cart(room_id):
     if cart and room_id in cart:
         # muốn thay đổi gì ở đây cũng được, trong session.
         del cart[room_id]
-
-    session['cart']=cart
+        session['cart']=cart
 
     return jsonify(cart_stats(cart))
-
 
 @app.route('/api/carts/<room_id>', methods=['put'])
 def update_cart(room_id):
@@ -320,6 +332,24 @@ def update_cart(room_id):
     session['cart'] = cart
 
     return jsonify(cart_stats(cart))
+
+@app.route('/api/pay', methods=['post'])
+def pay():
+    cart = session.get('cart')
+    print(cart)
+
+    if not cart:
+        return jsonify({'status': 400, 'err_msg': 'Không có sản phẩm trong giỏ hàng !'})
+
+    try:
+        booking, bill = dao.add_booking_and_bill(cart)
+    except Exception as ex:
+        print("khong thanh cong ")
+        return jsonify({'status': 500, 'err_msg': str(ex)})
+    else:
+        del session['cart']
+        print("thanh cong")
+        return jsonify({"status": 200, 'msg': 'successful'})
 
 
 @app.route('/delete-selected-rooms', methods=['POST'])
@@ -366,6 +396,63 @@ def delete_selected_rooms():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
+
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        data = request.json
+        selected_rooms = data.get('cart')  # List of selected room IDs
+        customer_id = current_user.id  # Assuming the logged-in user is the customer
+
+        if not selected_rooms:
+            return jsonify({'error': 'No rooms selected'}), 400
+
+        # Create a new bill
+        new_bill = Bill(customer_id=customer_id, payment_method=PaidMethod.CHUYEN_KHOAN)
+        db.session.add(new_bill)
+
+        for room in selected_rooms:
+            # Validate and fetch room details
+            room = Room.query.get(room['room_id'])
+            if not room or not room.is_available:
+                return jsonify({'error': f'Room ID {room} is not available'}), 400
+
+            # Calculate total (e.g., based on room type pricing)
+            room_type = RoomType.query.get(room.room_type_id)
+            total_price = room_type.price_per_night
+
+            # Add a booking for the room
+            new_booking = Booking(
+                checkin_date=datetime.datetime.now(),  # Adjust as needed
+                checkout_date=datetime.datetime.now() + datetime.timedelta(days=1),  # Example: 1-day booking
+                total=total_price,
+                customer_id=customer_id,
+                room_id=room.id
+            )
+            db.session.add(new_booking)
+
+            # Add a bill detail for the booking
+            new_bill_detail = BillDetail(
+                amount=1,  # Assume 1 room booked
+                unit_price=total_price,
+                booking_id=new_booking.id,
+                bill_id=new_bill.id
+            )
+            db.session.add(new_bill_detail)
+
+            # Update room availability
+            room.is_available = False
+
+        # Commit changes to the database
+        db.session.commit()
+
+        # Simulate a Stripe Checkout Session
+        # Replace this part with actual Stripe integration if required
+        return jsonify({'sessionId': 'mock-session-id'})  # Replace with actual session ID
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({'error': 'An error occurred while processing the payment'}), 500
 
 # Route cho trang Khách sạn
 @app.route('/hotel')

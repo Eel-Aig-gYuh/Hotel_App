@@ -2,6 +2,7 @@ asgiref==3.8.1
 blinker==1.8.2
 certifi==2024.8.30
 cffi==1.17.1
+charset-normalizer==3.4.0
 click==8.1.7
 cloudinary==1.41.0
 colorama==0.4.6
@@ -14,6 +15,7 @@ Flask-Login==0.6.3
 Flask-SQLAlchemy==3.1.1
 Flask-Uploads==0.2.1
 greenlet==3.1.1
+idna==3.10
 importlib_metadata==8.5.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
@@ -23,10 +25,12 @@ pycparser==2.22
 PyMySQL==1.1.1
 python-dateutil==2.9.0.post0
 pytz==2024.2
+requests==2.32.3
 setuptools==75.6.0
 six==1.16.0
 SQLAlchemy==2.0.36
 sqlparse==0.5.2
+stripe==11.4.0
 typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3

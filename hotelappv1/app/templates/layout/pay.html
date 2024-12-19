@@ -20,7 +20,7 @@
             {% set sum = 0 %}
             {% for room in session['cart'].values() %}
             <tr data-price="{{ room.room_type_price_per_night }}" id="cart{{room.room_id}}">
-                <td><input type="checkbox" data-room-name="{{ room.name }}"></td>
+                <td><input type="checkbox" data-room-id="{{ room.room_id }}" class="room-checkbox"></td>
                 <td>{{ room.room_name }}</td>
                 <td>{{ ROOM_TYPE_LABELS.get(room.room_type_name) }}</td>
                 <td>{{ room.checkin_date}}</td>
@@ -41,7 +41,7 @@
             <button class="btn btn-outline-danger btn-delete">Xóa</button>
             <a href="{{ url_for('room_process') }}"><button class="btn btn-outline-primary mx-2">Bạn muốn đặt thêm</button></a>
             {% if current_user.is_authenticated %}
-                <button class="btn btn-success">Thanh toán</button>
+                <button class="btn btn-success " onclick="pay()">Thanh toán</button>
             {% else %}
                 <a href="/login?next={{url_for('pay_process')}}"><button class="btn btn-success">Vui lòng đăng nhập để tiến hành thanh toán</button></a>
             {% endif %}
