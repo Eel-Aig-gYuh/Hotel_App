@@ -224,3 +224,14 @@ body{
     border-radius:10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+.is-invalid {
+    border-color: red;
+    background-color: #ffe6e6; /* Màu nền nhẹ đỏ */
+}
+
+.invalid-feedback {
+    color: red;
+    font-size: 0.875rem; /* Nhỏ hơn một chút so với văn bản thông thường */
+    margin-top: 0.25rem;
+}

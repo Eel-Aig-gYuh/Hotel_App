@@ -14,14 +14,14 @@
         <!-- Nút đăng ký và đăng nhập bên phải -->
         <div class="d-flex align-items-center">
             {% if current_user.is_authenticated %}
-                <a class="nav-link text-danger d-flex align-items-center" href="/">
-                    <img src="{{ current_user.avatar }}" width="25" class="rounded-circle me-2"/>
-                    Chào {{ current_user.username }}
-                </a>
-                <a class="btn btn-outline-danger ms-3" href="/logout">Đăng xuất</a>
+            <a class="nav-link text-danger d-flex align-items-center" href="/profile">
+                <img src="{{ current_user.avatar }}" width="25" class="rounded-circle me-2"/>
+                Chào {{ current_user.username }}
+            </a>
+            <a class="btn btn-outline-danger ms-3" href="/logout">Đăng xuất</a>
             {% else %}
-                <a href="/register_user" class="btn btn-outline-primary me-3">Đăng ký</a>
-                <a href="/login" class="btn btn-primary">Đăng nhập</a>
+            <a href="/register_user" class="btn btn-outline-primary me-3">Đăng ký</a>
+            <a href="/login" class="btn btn-primary">Đăng nhập</a>
             {% endif %}
         </div>
     </div>
@@ -35,17 +35,56 @@
         <li class="nav-item mx-3"><a class="nav-link" href="/rooms">Phòng nghỉ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/facilities">Cơ sở vật chất</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/contact">Liên hệ</a></li>
-        <li class="nav-item mx-3"><a class="nav-link" href="/pay"> Đã đặt &#128722; <span class="badge bg-danger cart-counter"> {{cart_stats.total_quantity}} </span></a></li>
+        <li class="nav-item mx-3"><a class="nav-link" href="/pay"> Đã đặt &#128722; <span
+                class="badge bg-danger cart-counter"> {{cart_stats.total_quantity}} </span></a></li>
     </ul>
 </div>
 
 <!-- Room Search -->
+<!--<div class="container mt-4">-->
+<!--    <div class="row">-->
+<!--        <div class="col">-->
+<!--            <form class="row g-3" action="{{url_for('search_process')}}" method="get" enctype="multipart/form-data">-->
+<!--                <div class="col-md-2">-->
+<!--                    <select class="form-select" name="room_style" aria-label="Chọn loại phòng">-->
+<!--                        <option selected value="">Phòng</option>-->
+<!--                        <option value="BINH_THUONG">Phòng Bình Thường</option>-->
+<!--                        <option value="GIA_DINH">Phòng Gia Đình</option>-->
+<!--                        <option value="DOANH_NHAN">Phòng Doanh Nhân</option>-->
+<!--                        <option value="VIP">Phòng VIP</option>-->
+<!--                    </select>-->
+<!--                </div>-->
+<!--                <script>-->
+<!--                    document.addEventListener('DOMContentLoaded', () => {-->
+<!--                        setDefaultDates('checkin_date', 'checkout_date');-->
+<!--                    });-->
+<!--                </script>-->
+<!--                <div class="col-md-2">-->
+<!--                    <input type="date" class="form-control" name="check_in" id="checkin_date" placeholder="Ngày đến">-->
+<!--                </div>-->
+<!--                <div class="col-md-2">-->
+<!--                    <input type="date" class="form-control" name="check_out" id="checkout_date" placeholder="Ngày đi">-->
+<!--                </div>-->
+<!--                <div class="col-md-2">-->
+<!--                    <input type="number" class="form-control" name="adults" placeholder="Người lớn: 1" min="0">-->
+<!--                </div>-->
+<!--                <div class="col-md-2">-->
+<!--                    <input type="number" class="form-control" name="children" placeholder="Trẻ em: 0" min="0">-->
+<!--                </div>-->
+<!--                <div class="col-md-2">-->
+<!--                    <button type="submit" class="btn btn-primary w-100" >Kiểm tra phòng</button>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
 <div class="container mt-4">
     <div class="row">
         <div class="col">
-            <form class="row g-3" action="{{url_for('search_process')}}" method="get" enctype="multipart/form-data">
+            <form class="row g-3" id="searchForm">
                 <div class="col-md-2">
-                    <select class="form-select" name="room_style" aria-label="Chọn loại phòng">
+                    <select class="form-select" name="room_style" id="room_style" aria-label="Chọn loại phòng">
                         <option selected value="">Phòng</option>
                         <option value="BINH_THUONG">Phòng Bình Thường</option>
                         <option value="GIA_DINH">Phòng Gia Đình</option>
@@ -53,11 +92,6 @@
                         <option value="VIP">Phòng VIP</option>
                     </select>
                 </div>
-                <script>
-                    document.addEventListener('DOMContentLoaded', () => {
-                        setDefaultDates('checkin_date', 'checkout_date');
-                    });
-                </script>
                 <div class="col-md-2">
                     <input type="date" class="form-control" name="check_in" id="checkin_date" placeholder="Ngày đến">
                 </div>
@@ -65,10 +99,10 @@
                     <input type="date" class="form-control" name="check_out" id="checkout_date" placeholder="Ngày đi">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" name="adults" placeholder="Người lớn: 1" min="0">
+                    <input type="number" class="form-control" name="adults" id="adults" placeholder="Người lớn: 1" min="0">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" name="children" placeholder="Trẻ em: 0" min="0">
+                    <input type="number" class="form-control" name="children" id="children" placeholder="Trẻ em: 0" min="0">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100" >Kiểm tra phòng</button>
@@ -77,3 +111,57 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Hàm điền dữ liệu vào form từ localStorage
+    function fillForm() {
+        const savedData = JSON.parse(localStorage.getItem('searchData'));
+        if (savedData) {
+            if (savedData.room_style) document.getElementById('room_style').value = savedData.room_style;
+            if (savedData.check_in) document.getElementById('checkin_date').value = savedData.check_in;
+            if (savedData.check_out) document.getElementById('checkout_date').value = savedData.check_out;
+            if (savedData.adults) document.getElementById('adults').value = savedData.adults;
+            if (savedData.children) document.getElementById('children').value = savedData.children;
+        }
+    }
+
+    // Lấy thông tin search từ form và lưu vào localStorage
+    function saveSearchData() {
+        const searchData = {
+            room_style: document.getElementById('room_style').value,
+            check_in: document.getElementById('checkin_date').value,
+            check_out: document.getElementById('checkout_date').value,
+            adults: document.getElementById('adults').value,
+            children: document.getElementById('children').value
+        };
+
+        // Lưu dữ liệu vào localStorage
+        localStorage.setItem('searchData', JSON.stringify(searchData));
+    }
+
+    // Gửi yêu cầu GET để lấy dữ liệu từ search.json (nếu cần)
+    fetch('/get_search_data')
+        .then(response => response.json())
+        .then(data => {
+            // Chỉ cập nhật dữ liệu từ server nếu localStorage chưa có dữ liệu
+            if (!localStorage.getItem('searchData')) {
+                localStorage.setItem('searchData', JSON.stringify(data));
+            }
+            fillForm();
+        })
+        .catch(error => {
+            console.error('Error loading search data:', error);
+            fillForm(); // Nếu không có dữ liệu từ server, điền dữ liệu từ localStorage
+        });
+
+    // Lắng nghe sự kiện thay đổi từ các phần tử trong form
+    const formElements = document.querySelectorAll('#searchForm input, #searchForm select');
+    formElements.forEach((element) => {
+        element.addEventListener('change', saveSearchData);
+    });
+});
+
+</script>
+
+

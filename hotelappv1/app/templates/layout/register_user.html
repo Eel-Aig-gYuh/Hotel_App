@@ -1,13 +1,13 @@
-{%extends 'layout/register.html'%}
+{% extends 'layout/register.html' %}
 
-{%block register%}
+{% block register %}
 <!-- Form nhập thông tin User -->
 <div class="col-md-6">
     <h3 class="text-center mb-4">Đăng ký: Thông tin người dùng</h3>
     {% if err_msg %}
-            <label class="text-danger">{{ err_msg }}</label>
+        <label class="text-danger">{{ err_msg }}</label>
     {% endif %}
-    <form action="{{url_for('register_user')}}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url_for('register_user') }}" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="lastName" class="form-label"><span class="star">*</span> Họ</label>
             <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Nhập họ" required>
@@ -18,15 +18,51 @@
         </div>
         <div class="mb-3">
             <label for="cmnd" class="form-label"><span class="star">*</span> CMND/CCCD</label>
-            <input type="tel" class="form-control" id="cmnd" name="cmnd" placeholder="CMND/CCCD" required>
+            <input
+                type="tel"
+                class="form-control {% if messageCmnd %}is-invalid{% endif %}"
+                id="cmnd"
+                name="cmnd"
+                placeholder="CMND/CCCD"
+                required
+            >
+            {% if messageCmnd %}
+            <div class="invalid-feedback">
+                {{ messageCmnd }}
+            </div>
+            {% endif %}
         </div>
         <div class="mb-3">
             <label for="email" class="form-label"><span class="star">*</span> Email</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            <input
+                type="email"
+                class="form-control {% if messageEmail %}is-invalid{% endif %}"
+                id="email"
+                name="email"
+                placeholder="Email"
+                required
+            >
+            {% if messageEmail %}
+            <div class="invalid-feedback">
+                {{ messageEmail }}
+            </div>
+            {% endif %}
         </div>
         <div class="mb-3">
             <label for="phone" class="form-label"><span class="star">*</span> Số điện thoại</label>
-            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Số điện thoại" required>
+            <input
+                type="tel"
+                class="form-control {% if messagePhone %}is-invalid{% endif %}"
+                id="phone"
+                name="phone"
+                placeholder="Số điện thoại"
+                required
+            >
+            {% if messagePhone %}
+            <div class="invalid-feedback">
+                {{ messagePhone }}
+            </div>
+            {% endif %}
         </div>
         <div class="d-grid">
             <button type="submit" class="btn btn-primary">Tiếp tục</button>

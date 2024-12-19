@@ -59,7 +59,8 @@ class Staff(Profile):
     hotel_id = Column(Integer, ForeignKey('hotel.id'), nullable=False)
 
     # relationship with user_staff (one - to - one)
-    user = relationship('User', backref='staff_user', lazy=True)
+    #user = relationship('User', backref='staff_user', lazy=True)
+    user = relationship('User', backref=backref('staff_user', uselist=False), lazy=True)
 
     def __str__(self):
         return self.first_name
@@ -71,7 +72,9 @@ class Customer(Profile):
     is_foreign = Column(Boolean, default=False)
 
     # relationship with user_customer (one - to - one)
-    user = relationship('User', backref='cus_user', lazy=True)
+    #user = relationship('User', backref='cus_user', lazy=True)
+    user = relationship('User', backref=backref('cus_user', uselist=False), lazy=True)
+
     # relationship with booking_customer (many - to - one)
     bookings = relationship('Booking', backref='cus_booking', lazy=True)
     # relationship with bill_customer (many - to - one)
@@ -316,7 +319,7 @@ if __name__ == '__main__':
 
         # db.drop_all()
         db.create_all()
-        #
+
         # data = {
         #     "user": [
         #         {"id": 1, "username": "admin", "password": str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),

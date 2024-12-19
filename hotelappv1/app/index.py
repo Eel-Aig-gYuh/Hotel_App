@@ -1,12 +1,19 @@
 import datetime
 import math
 import json
+import cloudinary
+import cloudinary.uploader
+import os
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from app import dao, login, app
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS
 from utils import cart_stats, format_date
+from app import db, app
+from models import User, Staff, Customer
+from sqlalchemy import text
+from datetime import timedelta
 
 
 @app.context_processor
@@ -70,6 +77,9 @@ def login_admin_process():
 @app.route('/register_user', methods=['get', 'post'])
 def register_user():
     err_msg = None
+    cus_phone = None
+    cus_email = None
+    cus_cmnd = None
     if request.method == 'POST':
         # Lấy thông tin từ form
         first_name = request.form.get('firstName')
@@ -77,6 +87,30 @@ def register_user():
         email = request.form.get('email')
         phone = request.form.get('phone')
         cmnd = request.form.get('cmnd')
+
+        if phone:
+            cus_phone = Customer.query.filter_by(phone=phone).all()
+
+        if email:
+            cus_email = Customer.query.filter_by(email=email).all()
+
+        if cmnd:
+            cus_cmnd = Customer.query.filter_by(CMND=cmnd).all()
+
+        if cus_cmnd:
+            print(f"CMND/CCCD đã tồn tại!")
+            flash('CMND/CCCD đã tồn tại!', 'danger')
+            return render_template('layout/register_user.html', messageCmnd="CMND/CCCD đã tồn tại!")
+
+        if cus_email:
+            print(f"Email đã tồn tại!")
+            flash('Email đã tồn tại!', 'danger')
+            return render_template('layout/register_user.html', messageEmail="Email đã tồn tại!")
+
+        if cus_phone:
+            print(f"Số điện thoại đã tồn tại!")
+            flash('Số điện thoại đã tồn tại!', 'danger')
+            return render_template('layout/register_user.html', messagePhone="Số điện thoại đã tồn tại!")
 
         if dao.check_email(email) is None:
             try:
@@ -102,7 +136,7 @@ def register_user():
 @app.route('/register_user/register_account', methods=['get', 'post'])
 def register_account():
     err_msg = None
-
+    cus_username = None
     # lấy dữ liệu được chuyển từ trang register_user.
     user_data = session.get('user_data')
 
@@ -111,6 +145,14 @@ def register_account():
 
     if request.method.__eq__('POST'):
         username = request.form.get('username').strip()
+        if username:
+            cus_username = User.query.filter_by(username=username).all()
+
+        if cus_username:
+            print(f"Tên truy cập đã tồn tại!")
+            flash('Tên truy cập đã tồn tại!', 'danger')
+            return render_template('layout/register_account.html', messageUsername="Tên truy cập đã tồn tại!")
+
         password = request.form.get('password').strip()
         confirm = request.form.get('confirm').strip()
 
@@ -303,7 +345,7 @@ def delete_cart(room_id):
         # muốn thay đổi gì ở đây cũng được, trong session.
         del cart[room_id]
 
-    session['cart']=cart
+    session['cart'] = cart
 
     return jsonify(cart_stats(cart))
 
@@ -388,6 +430,95 @@ def facilities():
 @app.route('/contact')
 def contact():
     return render_template('layout/contact.html')
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    user = current_user
+    profile = None
+    staff_phone = None
+    staff_email = None
+    cus_phone = None
+    cus_email = None
+
+    # Kiểm tra loại người dùng
+    if hasattr(user, 'cus_user'):
+        profile = user.cus_user
+    elif hasattr(user, 'staff_user'):
+        profile = user.staff_user
+
+    if not profile:
+        flash('Không tìm thấy thông tin người dùng!', 'danger')
+        return redirect(url_for('index'))
+
+    print(profile.first_name)
+
+    if request.method == 'POST':
+        # Cập nhật thông tin từ form
+        first_name = request.form.get('first_name', profile.first_name)
+        last_name = request.form.get('last_name', profile.last_name)
+        phone = request.form.get('phone', profile.phone)
+        email = request.form.get('email', profile.email)
+        avatar = request.files.get('avatar')
+
+        if phone:
+            staff_phone = Staff.query.filter_by(phone=phone).all()
+            cus_phone = Customer.query.filter_by(phone=phone).all()
+
+        if email:
+            staff_email = Staff.query.filter_by(email=email).all()
+            cus_email = Customer.query.filter_by(email=email).all()
+
+        # Gán giá trị mới cho profile
+        if profile.first_name.__eq__(first_name):
+            pass
+        else:
+            profile.first_name = first_name
+
+        if profile.last_name.__eq__(last_name):
+            pass
+        else:
+            profile.last_name = last_name
+
+        if profile.phone.__eq__(phone):
+            pass
+        else:
+            if staff_phone or cus_phone:
+                print(f"Số điện thoại bị trùng!")
+                flash('Số điện thoại bị trùng!', 'danger')
+                return render_template('layout/profile.html', user=user, profile=profile,
+                                       messagePhone="Số điện thoại bị trùng!")
+            else:
+                profile.phone = phone
+
+        if profile.email.__eq__(email):
+            pass
+        else:
+            if staff_email or cus_email:
+                print(f"Email bị trùng!")
+                flash('Email bị trùng!', 'danger')
+                return render_template('layout/profile.html', user=user, profile=profile,
+                                       messageEmail="Email bị trùng!")
+            else:
+                profile.email = email
+
+        # Upload avatar nếu có
+        if avatar:
+            upload_result = cloudinary.uploader.upload(avatar)
+            profile.avatar = upload_result['secure_url']
+
+        try:
+            db.session.commit()
+            flash('Thông tin cá nhân đã được cập nhật!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            print(f"Lỗi: {e}")
+            flash('Cập nhật thông tin thất bại!', 'danger')
+
+        return redirect(url_for('profile'))
+
+    return render_template('layout/profile.html', user=user, profile=profile)
+
 
 
 if __name__ == '__main__':
