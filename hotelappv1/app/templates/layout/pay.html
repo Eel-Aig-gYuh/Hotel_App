@@ -41,7 +41,7 @@
             <button class="btn btn-outline-danger btn-delete">Xóa</button>
             <a href="{{ url_for('room_process') }}"><button class="btn btn-outline-primary mx-2">Bạn muốn đặt thêm</button></a>
             {% if current_user.is_authenticated %}
-                <button class="btn btn-success " onclick="pay()">Thanh toán</button>
+                <button class="btn btn-success" onclick="pay()">Thanh toán</button>
             {% else %}
                 <a href="/login?next={{url_for('pay_process')}}"><button class="btn btn-success">Vui lòng đăng nhập để tiến hành thanh toán</button></a>
             {% endif %}

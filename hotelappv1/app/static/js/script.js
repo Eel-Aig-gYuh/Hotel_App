@@ -219,32 +219,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Sự kiện Thanh toán
-//    document.querySelector('.btn-pay').addEventListener('click', function() {
-//        console.log('Nút Thanh toán đã được nhấn');
-//        const selectedRooms = getSelectedRooms();
-//        const stripe = Stripe('pk_test_51QXAxiFyHL0Twlggl7sNXjDnaxX3RYY9XLJEvGaknQ6wPNuyMIMeZ20XpIbc4HhzDTkG5f9GDhEbdmvkRh2ifC8300x6aTawDW');
-//        if (selectedRooms.length > 0) {
-//            console.log('Phòng đã chọn:', selectedRooms);
-//            fetch('/create-checkout-session', {
-//                method: 'POST',
-//            headers: {
-//        'Content-Type': 'application/json',
-//        },
-//    body: JSON.stringify({ rooms: selectedRooms }), // Danh sách phòng được chọn
-//    })
-//    .then((response) => response.json())
-//    .then((data) => {
-//        if (data.error) {
-//            console.error('Error creating checkout session:', data.error);
-//        } else {
-//            const sessionId = data.sessionId;
-//            return stripe.redirectToCheckout({ sessionId: sessionId });
-//        }
-//    })
-//    .catch((error) => console.error('Error:', error));
-//
-//        }
-//    });
+    document.querySelector('.btn-pay').addEventListener('click', function() {
+        console.log('Nút Thanh toán đã được nhấn');
+        const selectedRooms = getSelectedRooms();
+        const stripe = Stripe('pk_test_51QXAxiFyHL0Twlggl7sNXjDnaxX3RYY9XLJEvGaknQ6wPNuyMIMeZ20XpIbc4HhzDTkG5f9GDhEbdmvkRh2ifC8300x6aTawDW');
+        if (selectedRooms.length > 0) {
+            console.log('Phòng đã chọn:', selectedRooms);
+            fetch('/create-checkout-session', {
+                method: 'POST',
+            headers: {
+        'Content-Type': 'application/json',
+        },
+    body: JSON.stringify({ rooms: selectedRooms }), // Danh sách phòng được chọn
+})
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.error) {
+            console.error('Error creating checkout session:', str(data.error));
+        } else {
+            const sessionId = data.sessionId;
+            return stripe.redirectToCheckout({ sessionId: sessionId });
+        }
+    })
+    .catch((error) => console.error('Error:', error));
+
+        }
+    });
 
     // Tính tổng tiền ngay khi trang tải lần đầu
     calculateTotal();
