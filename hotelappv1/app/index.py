@@ -342,7 +342,7 @@ def pay():
         return jsonify({'status': 400, 'err_msg': 'Không có sản phẩm trong giỏ hàng !'})
 
     try:
-        booking, bill = dao.add_booking_and_bill(cart)
+        dao.add_booking_and_bill(cart)
     except Exception as ex:
         print("khong thanh cong ")
         return jsonify({'status': 500, 'err_msg': str(ex)})

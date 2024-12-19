@@ -43,17 +43,13 @@ def add_booking_and_bill(cart):
         customer = Customer.query.get(customer_id)
 
         for c in cart.values():
-            # Get data from the first room (assuming cart contains one room per booking)
-            room_id = c.get('room_id')
-            room_name = c.get('room_name')
-            room_type_name = c.get('room_type_name')
-            room_type_price_per_night = c.get('room_type_price_per_night')
-            checkin_date = c.get('checkin_date')
-            checkout_date = c.get('checkout_date')
-            is_foreign = c.get('is_foreign', 1)  # Default to 1 if not provided
-            quantity = c.get('quantity', 1)  # Default to 1 if not provided
+            room_id = int(c['room_id'])
+            room_type_price_per_night = c['room_type_price_per_night']
+            checkin_date = c['checkin_date']
+            checkout_date = c['checkout_date']
+            quantity = c['quantity', 1]
 
-            # Validate that all necessary data is provided
+
             if not all([room_id, checkin_date, checkout_date, room_type_price_per_night, quantity]):
                 raise ValueError("Missing required room or booking information")
 
@@ -64,10 +60,8 @@ def add_booking_and_bill(cart):
             if not room_instance:
                 raise ValueError(f"Room with ID {room_id} not found")
 
-            # Calculate the total amount for the booking
             total_amount = room_type_price_per_night * quantity * (checkin_date - checkout_date).days
 
-            # Create the Booking object
             booking = Booking(
                 checkin_date=checkin_date,
                 checkout_date=checkout_date,
@@ -76,21 +70,18 @@ def add_booking_and_bill(cart):
                 total=total_amount
             )
 
-            # Add the booking to the session
             db.session.add(booking)
-            db.session.flush()  # Flush to ensure booking ID is assigned
+            db.session.flush()
 
-            # Now, create the Bill object associated with this booking
             bill = Bill(
+                id=booking,
                 customer_id=customer.id,
-                active=True  # Assuming the bill is active
+                active=True
             )
 
-            # Add the bill to the session
             db.session.add(bill)
-            db.session.flush()  # Flush to ensure bill ID is assigned
+            db.session.flush()
 
-            # Create BillDetail(s) for the room in the booking
             bill_detail = BillDetail(
                 bill_id=bill.id,
                 room_id=room_instance.id,
@@ -98,14 +89,12 @@ def add_booking_and_bill(cart):
                 unit_price=room_type_price_per_night
             )
 
-            # Add the bill detail to the session
+
             db.session.add(bill_detail)
 
-    # Commit the session to save the booking, bill, and bill detail
     try:
         db.session.commit()
         print("Booking and Bill created successfully")
-        return booking, bill  # Optionally return these objects
     except Exception as e:
         db.session.rollback()  # Rollback on error
         print(f"Error during booking and bill creation: {str(e)}")
