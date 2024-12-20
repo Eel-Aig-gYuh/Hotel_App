@@ -19,3 +19,9 @@ AREA_LABELS = {
     2: "26 m²",
     3: "36 m²"
 }
+BOOKING_STATUS_LABELS = {
+    1: "Chờ thanh toán",
+    2: "Đã thanh toán",
+    3: "Đang hủy đặt phòng",
+    4: "Hoàn thành"
+}

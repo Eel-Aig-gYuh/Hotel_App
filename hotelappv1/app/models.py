@@ -19,6 +19,12 @@ class RoomStyle(RoleEnum):
     DOANH_NHAN = 3
     VIP = 4
 
+class BookingStatus(RoleEnum):
+    PENDING = 1
+    CONFIRMED = 2
+    CANCELED = 3
+    COMPLETED = 4
+
 
 class TimestampMixin:
     created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
@@ -46,7 +52,7 @@ class Profile(db.Model):
     first_name = Column(NVARCHAR(20), nullable=False)
     phone = Column(CHAR(10), nullable=False, unique=True)
     email = Column(String(100), nullable=True, unique=True)
-    avatar = Column(String(255), nullable=True)
+    avatar = Column(String(255), nullable=True, default="https://res.cloudinary.com/dnqt29l2e/image/upload/v1732453992/user_qcj06n.png")
     active = Column(Boolean, default=True)
 
 
@@ -221,6 +227,7 @@ class Booking(db.Model, TimestampMixin):
     checkin_date = Column(DateTime, nullable=False)
     checkout_date = Column(DateTime, nullable=False)
     total = Column(DECIMAL(18,2), nullable=True)
+    status = Column(Enum(BookingStatus), default=BookingStatus.CONFIRMED)
 
     # relationship with booking_customer (many - to - one)
     customer_id = Column(Integer, ForeignKey('customer.id'), nullable=False)
@@ -314,6 +321,9 @@ service_image = db.Table(
 
 if __name__ == '__main__':
     with app.app_context():
+
+        # db.create_all()
+        # db.session.commit()
 
         db.drop_all()
         db.create_all()
@@ -736,3 +746,28 @@ if __name__ == '__main__':
             db.session.add(Image(**image))
 
         db.session.commit()
+
+        c1 = Comment(content='good service', customer_id=3, room_type_id=1)
+        c2 = Comment(content='great', customer_id=3, room_type_id=1)
+        c3 = Comment(content='beautiful', customer_id=3, room_type_id=1)
+
+        c4 = Comment(content='excellent', customer_id=3, room_type_id=2)
+        c5 = Comment(content='good vibe room', customer_id=3, room_type_id=2)
+        c6 = Comment(content='good service', customer_id=3, room_type_id=2)
+
+        c7 = Comment(content='niceeeee', customer_id=5, room_type_id=3)
+        c8 = Comment(content='good service', customer_id=5, room_type_id=3)
+
+        c9 = Comment(content='so fineeeeee', customer_id=5, room_type_id=4)
+
+        db.session.add(c1)
+        db.session.add(c2)
+        db.session.add(c3)
+        db.session.add(c4)
+        db.session.add(c5)
+        db.session.add(c6)
+        db.session.add(c7)
+        db.session.add(c8)
+        db.session.add(c9)
+
+

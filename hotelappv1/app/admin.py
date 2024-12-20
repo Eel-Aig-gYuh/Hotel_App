@@ -1,5 +1,5 @@
 
-from app import db, app
+from app import db, app, dao
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from models import Room, RoomType, Service, Rule, Image, Hotel
@@ -52,8 +52,10 @@ class LogoutView(MyView):
 class StatsView(MyView):
     @expose("/")
     def __index__(self):
-
-        return self.render('admin/stats.html')
+        stat = dao.revenue_stats()
+        stat_period = dao.period_stats()
+        usage_stats = dao.usage_of_room_type_stats()
+        return self.render('admin/stats.html', stats=stat, stat_period=stat_period, usage_stats=usage_stats)
 
 
 admin = Admin(app, name='Dream Hotel', template_mode='bootstrap4')

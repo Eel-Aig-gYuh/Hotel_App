@@ -1,3 +1,5 @@
+const bookedRoomCheckboxes = document.querySelectorAll('#bookedRoomsTable tbody tr td input[type="checkbox"]');
+
 function addToCart(room_id, room_name, room_type_name, room_type_price_per_night, room_type_capacity, checkin_date, checkout_date) {
     // Get the cart from sessionStorage
     let cart = JSON.parse(sessionStorage.getItem('cart')) || {};
@@ -5,6 +7,8 @@ function addToCart(room_id, room_name, room_type_name, room_type_price_per_night
     // Check if the room is already in the cart
     if (cart[room_id]) {
         alert('Phòng đã có trong giỏ hàng!');
+        console.info(cart)
+
         return; // Exit without adding the room again
     }
 
@@ -73,11 +77,37 @@ function deleteCart(room_id) {
         fetch(`/api/carts/${room_id}`, {
             method: "delete"
         }).then(res => res.json()).then(data => {
-            updateUI(data)
+            deleteCartItem(room_id)
+            updateUI(data);
             document.getElementById(`cart${room_id}`).style.display="none";
         })
     }
 }
+
+function deleteCartItem(item_id) {
+    // Retrieve the cart from sessionStorage
+    let cart = JSON.parse(sessionStorage.getItem('cart'));
+
+    // Check if cart exists and the item_id is in the cart
+    if (cart && cart.hasOwnProperty(item_id)) {
+        // Delete the item with the given item_id
+        delete cart[item_id];
+
+        // Optionally, remove the item from the UI if it's displayed
+        const cartItemElement = document.getElementById(`cart${item_id}`);
+        if (cartItemElement) {
+            cartItemElement.style.display = "none";  // Hide the cart item element
+        }
+
+        // Save the updated cart back to sessionStorage
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+
+        console.log(`Đã xóa thành công phòng ${item_id} ra khỏi cart.`);
+    } else {
+        console.log(`${item_id} không tìm thấy trong cart.`);
+    }
+}
+
 
 function setDefaultDates(checkinId, checkoutId) {
     const today = new Date().toISOString().split('T')[0];
@@ -104,22 +134,66 @@ function updateUI(data){
 }
 
 function pay(){
-    if (confirm("Bạn có chắc chắn muốn thanh toán không?") === true){
+    const selectedRooms = Array.from(document.querySelectorAll('.room-checkbox:checked')).map(checkbox =>
+        checkbox.getAttribute('data-room-id')
+    );
+
+    if (selectedRooms.length === 0) {
+        alert('Vui lòng chọn ít nhất một phòng để thanh toán.');
+        return;
+    }
+
+    if (confirm("Bạn có chắc chắn muốn thanh toán không?") === true) {
         fetch("/api/pay", {
-            method: "post"
-        }).then(res => res.json()).then(data => {
-            if (data.status === 200) {
-                alert("Thanh toán thành công !");
-                location.reload();
-            }
-            else
-                alert("Thanh toán không thành công !");
-        }).catch(error => {
-            console.error("Error:", error);
-            alert("Đã xảy ra lỗi khi thanh toán!");
-        });
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ selected_room_ids: selectedRooms }), // Pass the selected rooms here
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 200) {
+                    alert(data.msg || "Thanh toán thành công!");
+                    location.reload();
+                } else {
+                    alert(data.err_msg || "Thanh toán không thành công!");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Đã xảy ra lỗi khi thanh toán!");
+            });
     }
 }
+
+function addComment(room_id, room_name, room_style, room_price, room_capacity, checkin, checkout, room_type_id){
+    fetch(`/rooms/room_detail/${room_id}/${room_name}/${room_style}/${room_price}/${room_capacity}/${checkin}/${checkout}/comments`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            "content": document.getElementById("content").value
+        })
+    }).then(res => res.json()).then(c => {
+        location.reload()
+    })
+}
+
+// Hàm lấy danh sách các phòng đã chọn
+function getSelectedRooms() {
+    const selectedRooms = [];
+        bookedRoomCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const roomId = checkbox.getAttribute('data-room-id');
+                console.log('Selected room ID:', roomId);  // Debugging line
+            selectedRooms.push({ room_id: roomId });
+        }
+    });
+    return selectedRooms;
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     // Các checkbox của danh sách phòng đã đặt
@@ -149,20 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         totalAmountDisplay.textContent = total.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
     }
-
-    // Hàm lấy danh sách các phòng đã chọn
-    function getSelectedRooms() {
-        const selectedRooms = [];
-        bookedRoomCheckboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                const roomId = checkbox.getAttribute('data-room-id');
-                console.log('Selected room ID:', roomId);  // Debugging line
-                selectedRooms.push({ room_id: roomId });
-            }
-        });
-        return selectedRooms;
-    }
-
 
 
     // Hàm gửi yêu cầu lên server

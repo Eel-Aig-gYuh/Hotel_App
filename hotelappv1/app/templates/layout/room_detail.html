@@ -32,6 +32,7 @@
                 </button>
             </div>
         </div>
+
         <div class="col-md-6">
             <h4>Phòng {{ ROOM_TYPE_LABELS.get(room_style.value, "Khác")}} {{ BED_TYPE_LABELS.get(room_capacity) }}</h4>
             <p class="text-muted">
@@ -70,6 +71,47 @@
                         {{room_price}}, {{room_capacity}}, '{{checkin}}', '{{checkout}}')">Đặt phòng</button>
             </a>
         </div>
+
+        <div class="mt-5">
+            {% if current_user.is_authenticated %}
+                <div class="form-group mt-5">
+                    <label for="content">Comment:</label>
+                    <textarea class="form-control" rows="5" id="content" placeholder="Nội dung bình luận"></textarea>
+                    <button class="btn btn-info mt-3" onclick="addComment({{room_id}}, '{{room_name}}', '{{room_style}}',
+                        {{room_price}}, {{room_capacity}}, '{{checkin}}', '{{checkout}}', {{ room_type_id }})">Bình luận</button>
+                </div>
+            {% else %}
+                <a href="/login?next={{ url_for('room_detail', room_id=room_id, room_name=room_name, room_style=room_style, room_price=room_price, room_capacity=room_capacity, checkin=checkin, checkout=checkout) }}">
+                    <button class="btn btn-success">Vui lòng đăng nhập để bình luận</button></a>
+            {% endif %}
+        </div>
+
+        <ul class="list-group mt-5" id="comments">
+            {% for c in comments%}
+                <li class="list-group-item">
+                <div class="row">
+                    <div class="col-md-1">
+                        <img src="{{ c.cus_cmt.avatar }}" class="img-fluid rounded-circle">
+                    </div>
+                    <div class="col-md-11">
+                        <p> <strong> {{ c.cus_cmt.last_name }} {{ c.cus_cmt.first_name }} </strong></p>
+                        <p>{{ c.content }}</p>
+                        <p class="date_cmt">{{ c.created_at }}</p>
+                    </div>
+                </div>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
+
+<script>
+    window.onload = function() {
+        let date = document.getElementsByClassName("date_cmt");
+        for (let d of date){
+            d.innerText = moment(d.innerText).locale("vi").fromNow();
+        }
+    }
+</script>
+
 {% endblock %}

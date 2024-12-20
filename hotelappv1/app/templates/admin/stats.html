@@ -2,4 +2,68 @@
 
 {% block body %}
 <h1 class="text-danger text-center mt-1">THÔNG KÊ BÁO CÁO</h1>
+
+<div class="row">
+    <div class="col-md-7 col-12"></div>
+    <div class="col-md-5 col-12">
+        <canvas id="myChart">
+            <table class="table">
+                <tr>
+                    <th>Id</th>
+                    <th>Tên phòng</th>
+                    <th>Tổng doanh thu</th>
+                </tr>
+                {% for s in stats %}
+                <tr>
+                    <td>{{ s[0] }}</td>
+                    <td>{{ s[1] }}</td>
+                    <td>{{ s[2] }} VND</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table class="table">
+                <tr>
+                    <th>Loại phòng</th>
+                    <th>Tổng phòng</th>
+                    <th>Tổng lượng được đặt</th>
+                    <th>Tổng</th>
+                </tr>
+                {% for s in usage_stat %}
+                <tr>
+                    <td>{{ s[0] }}</td>
+                    <td>{{ s[1] }}</td>
+                    <td>{{ s[2] }}</td>
+                    <td>{{ s[3] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    window.onload = function(){
+        const ctx = document.getElementById('myChart');
+            new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+              datasets: [{
+                label: '# of Votes',
+                data: [12, 19, 3, 5, 2, 3],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }
+        });
+    }
+</script>
+
 {% endblock %}

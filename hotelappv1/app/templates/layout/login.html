@@ -13,7 +13,11 @@
         <!-- Form đăng nhập -->
         <div class="col-md-6">
             <h3 class="text-center mb-4">Đăng nhập</h3>
-
+            {% if err_msg: %}
+            <div>
+                <p class="text-danger"> <strong> {{err_msg }} </strong></p>
+            </div>
+            {% endif %}
             <form method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="username" class="form-label">Tên truy cập hoặc Email</label>

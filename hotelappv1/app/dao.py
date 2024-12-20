@@ -1,8 +1,10 @@
 import hashlib
+from calendar import month
 
 from django.utils.datetime_safe import datetime
+from sqlalchemy import func
 
-from models import Room, User, Staff, Hotel, Customer, RoomType, Rule, Image, Service, Bill, BillDetail, Booking
+from models import Room, User, Staff, Hotel, Customer, RoomType, Rule, Image, Service, Bill, BillDetail, Booking, Comment
 from app import db, app
 from flask_login import current_user
 
@@ -35,7 +37,6 @@ def add_user(first_name, last_name, cmnd, email, phone, username, password):
     customer = Customer(id=get_user_by_username(username), first_name=first_name, last_name=last_name, email=email, phone=phone, CMND=cmnd)
     db.session.add(customer)
     db.session.commit()
-
 
 def add_booking_and_bill(cart):
     if not cart:
@@ -109,6 +110,13 @@ def add_booking_and_bill(cart):
         print(f"Error occurred: {e}")
         raise ValueError("An error occurred while processing bookings and bills.")
 
+def add_comment(content, room_type_id):
+    c = Comment(content=content, room_type_id=room_type_id, customer_id=current_user.id)
+
+    db.session.add(c)
+    db.session.commit()
+
+    return c
 
 def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=None, adult=None, children=None, room_in_cart=None, page=1):
     available_room = db.session.query(Room, RoomType).join(RoomType).filter(Room.is_available == True)
@@ -122,10 +130,16 @@ def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=N
     if room_style:
         available_room = available_room.filter(RoomType.name.__eq__(room_style))
 
-    if check_in:
-        pass
-    if check_out:
-        pass
+    if check_in and check_out:
+        available_room = available_room.filter(
+            ~Room.id.in_(
+                db.session.query(Booking.room_id)
+                .filter(
+                    Booking.checkin_date < check_out,
+                    Booking.checkout_date > check_in
+                )
+            )
+        )
 
     if adult:
         available_room = available_room.filter(RoomType.capacity>=(int(adult)+int(children)//2))
@@ -176,6 +190,9 @@ def load_service():
 
     return service
 
+def load_comment(room_type_id):
+    return Comment.query.filter(Comment.room_type_id.__eq__(room_type_id)).all()
+
 
 def get_user_by_id(ids):
     return User.query.get(ids)
@@ -223,3 +240,53 @@ def calculate_stay_duration(checkin_date_str, checkout_date_str):
     if stay_duration <= 0:
         raise ValueError("Invalid check-in and check-out dates. Checkout must be after check-in.")
     return stay_duration
+
+
+def revenue_stats(kw=None):
+    query = (db.session.query(Room.id, Room.name, func.sum(BillDetail.amount))
+             .join(BillDetail, BillDetail.room_id.__eq__(Room.id), isouter=True).group_by(Room.id))
+
+    if kw:
+        query = query.filter(Room.name.contains(kw))
+
+    return query.all()
+
+def period_stats(p='month', year=datetime.now().year):
+
+    return (db.session.query(func.extract(p, Bill.created_at,
+                              func.sum(BillDetail.amount))
+                .join(BillDetail, BillDetail.bill_id.__eq__(Bill.id), isouter=True)
+                .group_by(func.extract(p, Bill.created_at), func.extract('year', Bill.created_at))
+                .filter(func.extract('year', Bill.created_at).__eq__(year))).all())
+
+def usage_of_room_type_stats():
+    current_time = datetime.now()
+
+    # Query to calculate the usage density for each room type
+    result = db.session.query(
+        RoomType.name.label('room_type_name'),
+        func.count(Room.id.distinct()).label('total_rooms'),
+        func.count(Booking.room_id.distinct()).label('booked_rooms'),
+        (func.count(Booking.room_id.distinct()) / func.count(Room.id.distinct()) * 100).label('usage_density')
+    ).join(Room, Room.room_type_id == RoomType.id,) \
+        .join(Booking, Booking.room_id == Room.id, isouter=False) \
+        .filter(Booking.checkin_date <= current_time, Booking.checkout_date >= current_time) \
+        .group_by(RoomType.name) \
+        .all()
+
+    # Format the results
+    usage_data = []
+    for row in result:
+        usage_data.append({
+            'room_type': row.room_type_name,
+            'total_rooms': row.total_rooms,
+            'booked_rooms': row.booked_rooms,
+            'usage_density': row.usage_density
+        })
+
+    return usage_data
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        print(usage_of_room_type_stats())
