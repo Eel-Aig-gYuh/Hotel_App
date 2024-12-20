@@ -113,6 +113,7 @@
 </div>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', () => {
     // Hàm điền dữ liệu vào form từ localStorage
     function fillForm() {
@@ -140,20 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('searchData', JSON.stringify(searchData));
     }
 
-    // Gửi yêu cầu GET để lấy dữ liệu từ search.json (nếu cần)
-    fetch('/get_search_data')
-        .then(response => response.json())
-        .then(data => {
-            // Chỉ cập nhật dữ liệu từ server nếu localStorage chưa có dữ liệu
-            if (!localStorage.getItem('searchData')) {
-                localStorage.setItem('searchData', JSON.stringify(data));
-            }
-            fillForm();
-        })
-        .catch(error => {
-            console.error('Error loading search data:', error);
-            fillForm(); // Nếu không có dữ liệu từ server, điền dữ liệu từ localStorage
-        });
+    // Điền dữ liệu từ localStorage khi trang tải
+    fillForm();
 
     // Lắng nghe sự kiện thay đổi từ các phần tử trong form
     const formElements = document.querySelectorAll('#searchForm input, #searchForm select');

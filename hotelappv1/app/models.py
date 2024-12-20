@@ -736,5 +736,5 @@ if __name__ == '__main__':
         #
         # for image in data['image']:
         #     db.session.add(Image(**image))
-
+        #
         db.session.commit()
