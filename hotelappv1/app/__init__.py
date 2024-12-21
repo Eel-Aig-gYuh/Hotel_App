@@ -1,3 +1,4 @@
+import stripe
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import quote
 from flask import Flask
@@ -14,6 +15,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 # check file sql
 # app.config["SQLALCHEMY_ECHO"] = True
 app.config["PAGE_SIZE"] = 4
+
+stripe.api_key = "sk_test_51QXAxiFyHL0TwlggzVyQhZn85ZNCLAhzoiTNpWWrZCRkSXQPAQvnxTOqhMCTonr4mtrBojrHYawt7Oza36vuVEev00yhxVPMEX"
+app.secret_key = 'GH33*1SD4P03M*0FTH3DR34MC1TY'
 
 db = SQLAlchemy(app=app)
 

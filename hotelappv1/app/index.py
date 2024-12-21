@@ -4,12 +4,13 @@ import stripe
 import cloudinary.uploader
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
+from sqlalchemy import func
+
 from app import dao, login, app, db
 from flask_login import login_user, logout_user, current_user, login_required
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS, BOOKING_STATUS_LABELS
 from utils import cart_stats, format_date
-from urllib.parse import urlencode
-from models import Staff, Customer, User, BookingStatus
+from models import Staff, Customer, User, BookingStatus, Room, Booking
 
 
 @app.context_processor
@@ -194,7 +195,7 @@ def profile():
 
     profile = profile[0]
 
-    print(current_user.cus_user[0].first_name)
+    # print(current_user.cus_user[0].first_name)
 
     if request.method == 'POST':
         # Cập nhật thông tin từ form
@@ -330,7 +331,7 @@ def room_process():
     check_out = request.form.get('check_out', (datetime.datetime.now() + datetime.timedelta(days=1)))
 
     cart = session.get('cart')
-    print(cart)
+    # print(cart)
 
     # room = dao.load_room_type(room_id=room_id, check_in=check_in, check_out=check_out, page=page)
     room = dao.load_room(kw=kw, room_id=room_id, room_in_cart=cart, check_in=check_in, check_out=check_out, page=1)
@@ -449,7 +450,10 @@ def add_to_cart():
 
 @app.route('/pay')
 def pay_process():
-    book_room_is_paid = dao.load_is_book_of_user()
+    if current_user.is_authenticated:
+        book_room_is_paid = dao.load_is_book_of_user(current_user.id)
+    else:
+        book_room_is_paid = dao.load_is_book_of_user()
 
     booking_data = []
     for booking, room, room_type in book_room_is_paid:
@@ -463,7 +467,7 @@ def pay_process():
             'status': booking.status
         })
 
-    print(booking_data)
+    # print(booking_data)
 
     return render_template('layout/pay.html',
                            ROOM_TYPE_LABELS=ROOM_TYPE_LABELS, BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS,
@@ -552,24 +556,28 @@ def pay():
 def create_checkout_session():
     try:
         data = request.json
-        selected_room_ids = data.get('selected_room_ids', [])
+        selected_room_ids = data.get('rooms', [])
+        print(selected_room_ids)
 
-        print(f"Received cart: {cart} (Type: {type(cart)})")
+        if not selected_room_ids:
+            return jsonify({'status': 400, 'err_msg': 'Vui lòng chọn ít nhất một phòng để thanh toán.'})
 
-        # Handle improperly sent JSON string
-        if isinstance(cart, str):
-            import json
-            cart = json.loads(cart)
+        cart = session.get('cart', {})
+        print(cart)
 
-        # Validate cart format
-        if not isinstance(cart, list) or not all(isinstance(room, dict) for room in cart):
-            raise ValueError("Invalid cart format. Expected a list of dictionaries.")
+        # Extract room_id values from the list of dictionaries
+        selected_room_ids = [room['room_id'] for room in selected_room_ids]
+        print("Extracted Room IDs:", selected_room_ids)
+
+        # Filter the cart to get the selected rooms
+        selected_rooms = {room_id: room for room_id, room in cart.items() if room_id in selected_room_ids}
+        print("Selected Rooms:", selected_rooms)
+        if not selected_rooms:
+            return jsonify({'status': 400, 'err_msg': 'Không có phòng hợp lệ được chọn.'})
 
         # Create line_items for Stripe
-        line_items = []
-        for room in cart:
-            print(f"Processing room: {room}")
-            line_items.append({
+        line_items = [
+            {
                 'price_data': {
                     'currency': 'vnd',
                     'product_data': {
@@ -579,45 +587,36 @@ def create_checkout_session():
                     'unit_amount': int(room['room_type_price_per_night']),
                 },
                 'quantity': 1,
-            })
+            }
+            for room in selected_rooms.values()
+        ]
+
+        print("Line Items: ", line_items)
 
         # Prepare room details for success_url
-        room_ids = [room['room_id'] for room in cart]
-        room_names = [room['room_name'] for room in cart]
-
-        # Create query string for success_url
-        query_params = urlencode({
-            'room_ids': ','.join(map(str, room_ids)),
-            'room_names': ','.join(room_names),
-        })
+        room_ids = [room['room_id'] for room in selected_rooms.values()]
+        room_names = [room['room_name'] for room in selected_rooms.values()]
 
         # Create Stripe checkout session
-        session = stripe.checkout.Session.create(
+        stripe_session = stripe.checkout.Session.create(  # Corrected variable name
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url=url_for('payment_success', _external=True) + '?' + query_params,
-            cancel_url=url_for('pay', _external=True)
+            success_url=url_for('payment_success', _external=True),
+            cancel_url=url_for('pay_process', _external=True)
         )
 
-        return jsonify({'sessionId': session.id})
+        return jsonify({'status': 200, 'sessionId': stripe_session.id}), 200
 
     except Exception as e:
         print(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'status': 500, 'error': str(e)}), 500
 
-@app.route('/payment-success')
+
+@app.route('/payment-success', methods=['post', 'get'])
 def payment_success():
-    # Lấy thông tin phòng từ query parameters
-    room_id = request.args.get('room_id', '')
-    room_name = request.args.get('room_name', '')
+    return render_template('/layout/pay.html', port=200)
 
-    # Chuyển đổi room_ids và room_names thành danh sách
-    room_id_list = room_id.split(',')
-    room_name_list = room_name.split(',')
-
-    # Xử lý tiếp với thông tin phòng
-    return f"Thanh toán thành công cho các phòng: {', '.join(room_name_list)} (ID: {', '.join(room_id_list)})"
 
 @app.route(
     '/rooms/room_detail/<int:room_id>/<string:room_name>/<string:room_style>/<int:room_price>/<int:room_capacity>/<checkin>/<checkout>/comments',
@@ -659,6 +658,67 @@ def facilities():
 @app.route('/contact')
 def contact():
     return render_template('layout/contact.html')
+
+
+@app.route('/api/reports/revenue', methods=['GET'])
+def report_revenue():
+    try:
+        month = int(request.args.get('month'))
+        year = int(request.args.get('year'))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid month or year"}), 400
+
+    revenue_stats = dao.revenue_stats(month, year)
+
+    revenue_stats = dao.serialize_revenue_stats(revenue_stats)
+    print(revenue_stats)
+
+    total_revenue = sum(row['revenue'] for row in revenue_stats)
+
+    data = {
+        "month": month,
+        "year": year,
+        "revenue_stats": [
+            {
+                "room_type": str(row['room_type']),
+                "revenue": row['revenue'],
+                "booking_count": row['booking_count'],
+                "percentage": round(row['revenue'] / total_revenue * 100, 2) if total_revenue > 0 else 0
+            }
+            for row in revenue_stats
+        ],
+        "total_revenue": total_revenue
+    }
+    print(data)
+    print("done index")
+    return jsonify(data)
+
+
+@app.route('/api/reports/usage', methods=['GET'])
+def report_usage():
+    try:
+        month = int(request.args.get('month'))
+        year = int(request.args.get('year'))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid month or year"}), 400
+
+    usage_stats = dao.usage_stats(month, year)
+    total_days_used = sum(row.days_used for row in usage_stats)
+
+    data = {
+        "month": month,
+        "year": year,
+        "usage_stats": [
+            {
+                "room_name": row.room_name,
+                "days_used": row.days_used,
+                "percentage": round(row.days_used / total_days_used * 100, 2) if total_days_used > 0 else 0
+            }
+            for row in usage_stats
+        ]
+    }
+    print(data)
+    return jsonify(data)
 
 
 if __name__ == '__main__':

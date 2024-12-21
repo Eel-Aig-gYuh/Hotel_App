@@ -63,6 +63,5 @@ admin.add_view(ServiceView(Service, db.session))
 admin.add_views(HotelView(Hotel, db.session))
 admin.add_view(RoomView(Room, db.session))
 admin.add_view(RuleView(Rule, db.session))
-
 admin.add_view(StatsView(name='Thống kê - báo cáo'))
 admin.add_view(LogoutView(name='Đăng xuất'))

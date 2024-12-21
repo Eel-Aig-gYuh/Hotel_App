@@ -1,22 +1,13 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
+
+{% if current_user.is_authenticated and current_user.is_admin.__eq__(True) %}
 <h1 class="text-danger text-center mt-1">THỐNG KÊ BÁO CÁO</h1>
+
+<h4 class="text-danger text-center mt-1">Vui lòng nhập thông tin thống kê</h4>
+
 <div class="container mt-4">
-    <!-- Form nhập tháng và năm -->
-<!--    <form id="reportForm" class="row g-3 align-items-center mb-4">-->
-<!--        <div class="col-auto">-->
-<!--            <label for="month" class="form-label">Tháng:</label>-->
-<!--            <input type="number" id="month" name="month" class="form-control" min="1" max="12" required>-->
-<!--        </div>-->
-<!--        <div class="col-auto">-->
-<!--            <label for="year" class="form-label">Năm:</label>-->
-<!--            <input type="number" id="year" name="year" class="form-control" min="2000" required>-->
-<!--        </div>-->
-<!--        <div class="col-auto d-flex justify-content-center">-->
-<!--            <button class="btn btn-primary btn-stats" type="submit">Tạo thống kê- Báo cáo</button>-->
-<!--        </div>-->
-<!--    </form>-->
     <form id="reportForm" class="row g-3 align-items-center mb-4">
     <div class="col-auto w-25">
         <label for="month" class="form-label">Tháng:</label>
@@ -35,21 +26,61 @@
     <!-- Khu vực báo cáo doanh thu -->
     <div id="revenueReport" class="mb-5">
         <h3 class="text-primary">BÁO CÁO DOANH THU THEO THÁNG</h3>
-        <canvas id="revenueChart" class="mb-3"></canvas>
-        <table id="revenueTable" class="table table-bordered table-striped">
-            <!-- Nội dung bảng sẽ được thêm bằng JavaScript -->
-        </table>
+        <div class="row">
+            <div class="col-md-7 col-12">
+                <table id="revenueTable" class="table table-bordered table-striped">
+                    <!-- Nội dung bảng sẽ được thêm bằng JavaScript -->
+                    <tr>
+                        <th>Loại phòng</th>
+                        <th>Doanh thu</th>
+                        <th>Số lượt thuê</th>
+                        <th>Tỷ lệ</th>
+                    </tr>
+                    {% for month, year, d in data %}
+                    <tr>
+                        <td>{{ d[0] }}</td>
+                        <td>{{ d[1] }}</td>
+                        <td>{{ d[2] }} VND</td>
+                        <td>{{ d[3] }} VND</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="col-md-5 col-12">
+                <canvas id="revenueChart" class="mb-3"></canvas>
+            </div>
+        </div>
     </div>
 
     <!-- Khu vực báo cáo sử dụng phòng -->
     <div id="usageReport">
         <h3 class="text-primary">BÁO CÁO MẬT ĐỘ SỬ DỤNG PHÒNG</h3>
-        <canvas id="usageChart" class="mb-3"></canvas>
-        <table id="usageTable" class="table table-bordered table-striped">
-            <!-- Nội dung bảng sẽ được thêm bằng JavaScript -->
-        </table>
+
+        <div class="row">
+            <div class="col-md-7 col-12">
+                <table id="usageTable" class="table table-bordered table-striped">
+                    <!-- Nội dung bảng sẽ được thêm bằng JavaScript -->
+                    <tr>
+                        <th>Phòng</th>
+                        <th>Số ngày thuêu</th>
+                        <th>Tỷ lệ</th>
+                    </tr>
+                    {% for month, year, d in data %}
+                    <tr>
+                        <td>{{ d[0] }}</td>
+                        <td>{{ d[1] }}</td>
+                        <td>{{ d[2] }} VND</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="col-md-5 col-12">
+                <canvas id="usageChart" class="mb-3"></canvas>
+            </div>
+        </div>
     </div>
 </div>
+{% endif %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

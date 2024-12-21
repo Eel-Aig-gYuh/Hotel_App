@@ -10,7 +10,19 @@
     <form action="{{url_for('register_account')}}" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="username" class="form-label">* Tên truy cập</label>
-            <input type="text" class="form-control" id="username" name="username" placeholder="Tên truy cập" required>
+            <input
+                type="text"
+                class="form-control {% if messageUsername %}is-invalid{% endif %}"
+                id="username"
+                name="username"
+                placeholder="Tên truy cập"
+                required
+                value="{{ request.form.get('username', '') }}">
+            {% if messageUsername %}
+                <div class="invalid-feedback">
+                    {{ messageUsername }}
+                </div>
+            {% endif %}
         </div>
         <div class="mb-3">
             <label for="password" class="form-label">* Mật khẩu</label>

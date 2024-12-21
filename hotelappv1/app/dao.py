@@ -126,12 +126,15 @@ def add_comment(content, room_type_id):
 
     return c
 
-def load_is_book_of_user():
+def load_is_book_of_user(customer_id=None):
     available_booking_room = (db.session.query(Booking, Room, RoomType)
                               .select_from(Booking)
                               .join(Room, Booking.room_id == Room.id)
                               .join(RoomType, Room.room_type_id == RoomType.id)
                               )
+
+    if customer_id:
+        available_booking_room = available_booking_room.filter(Booking.customer_id.__eq__(customer_id))
 
     return available_booking_room.all()
 
@@ -274,7 +277,38 @@ def calculate_stay_duration(checkin_date_str, checkout_date_str):
     return stay_duration
 
 
-def revenue_stats(kw=None):
+def revenue_stats(month=None, year=None):
+    return db.session.query(
+        RoomType.name.label('room_type'),
+        func.sum(BillDetail.amount * BillDetail.unit_price).label('revenue'),
+        func.count(Booking.id).label('booking_count')
+    ).join(Room, RoomType.id == Room.room_type_id) \
+        .join(Booking, Room.id == Booking.room_id) \
+        .join(Bill, Booking.id == Bill.id) \
+        .join(BillDetail, Bill.id == BillDetail.bill_id) \
+        .filter(func.month(Booking.checkin_date) == month, func.year(Booking.checkin_date) == year) \
+        .group_by(RoomType.name).all()
+
+def serialize_revenue_stats(results):
+    return [
+        {
+            'room_type': result.room_type,  # RoomType enum is automatically converted to string
+            'revenue': float(result.revenue),
+            'booking_count': result.booking_count
+        }
+        for result in results
+    ]
+
+def usage_stats(month=None, year=None):
+    return db.session.query(
+        Room.name.label('room_name'),
+        func.sum(func.datediff(Booking.checkout_date, Booking.checkin_date)).label('days_used')
+    ).join(Booking, Room.id == Booking.room_id) \
+        .filter(func.month(Booking.checkin_date) == month, func.year(Booking.checkin_date) == year) \
+        .group_by(Room.name).all()
+
+
+def revenue_stats2(kw=None):
     query = (db.session.query(Room.id, Room.name, func.sum(BillDetail.amount))
              .join(BillDetail, BillDetail.room_id.__eq__(Room.id), isouter=True).group_by(Room.id))
 
@@ -318,75 +352,6 @@ def usage_of_room_type_stats():
 
     return usage_data
 
-@app.route('/api/reports/revenue', methods=['GET'])
-def report_revenue():
-    try:
-        month = int(request.args.get('month'))
-        year = int(request.args.get('year'))
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid month or year"}), 400
-
-    revenue_stats = db.session.query(
-        RoomType.name.label('room_type'),
-        func.sum(BillDetail.amount * BillDetail.unit_price).label('revenue'),
-        func.count(BillDetail.booking_id).label('booking_count')
-    ).join(Room, RoomType.id == Room.room_type_id) \
-        .join(Booking, Room.id == Booking.room_id) \
-        .join(BillDetail, Booking.id == BillDetail.booking_id) \
-        .filter(func.month(Booking.checkin_date) == month, func.year(Booking.checkin_date) == year) \
-        .group_by(RoomType.name).all()
-
-    total_revenue = sum(row.revenue for row in revenue_stats)
-
-    data = {
-        "month": month,
-        "year": year,
-        "revenue_stats": [
-            {
-                "room_type": row.room_type,
-                "revenue": row.revenue,
-                "booking_count": row.booking_count,
-                "percentage": round(row.revenue / total_revenue * 100, 2) if total_revenue > 0 else 0
-            }
-            for row in revenue_stats
-        ],
-        "total_revenue": total_revenue
-    }
-    print(data)
-    return jsonify(data)
-
-
-@app.route('/api/reports/usage', methods=['GET'])
-def report_usage():
-    try:
-        month = int(request.args.get('month'))
-        year = int(request.args.get('year'))
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid month or year"}), 400
-
-    usage_stats = db.session.query(
-        Room.name.label('room_name'),
-        func.sum(func.datediff(Booking.checkout_date, Booking.checkin_date)).label('days_used')
-    ).join(Booking, Room.id == Booking.room_id) \
-        .filter(func.month(Booking.checkin_date) == month, func.year(Booking.checkin_date) == year) \
-        .group_by(Room.name).all()
-
-    total_days_used = sum(row.days_used for row in usage_stats)
-
-    data = {
-        "month": month,
-        "year": year,
-        "usage_stats": [
-            {
-                "room_name": row.room_name,
-                "days_used": row.days_used,
-                "percentage": round(row.days_used / total_days_used * 100, 2) if total_days_used > 0 else 0
-            }
-            for row in usage_stats
-        ]
-    }
-    print(data)
-    return jsonify(data)
 
 if __name__ == '__main__':
     with app.app_context():
