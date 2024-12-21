@@ -1,69 +1,155 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-<h1 class="text-danger text-center mt-1">THÔNG KÊ BÁO CÁO</h1>
+<h1 class="text-danger text-center mt-1">THỐNG KÊ BÁO CÁO</h1>
+<div class="container mt-4">
+    <!-- Form nhập tháng và năm -->
+<!--    <form id="reportForm" class="row g-3 align-items-center mb-4">-->
+<!--        <div class="col-auto">-->
+<!--            <label for="month" class="form-label">Tháng:</label>-->
+<!--            <input type="number" id="month" name="month" class="form-control" min="1" max="12" required>-->
+<!--        </div>-->
+<!--        <div class="col-auto">-->
+<!--            <label for="year" class="form-label">Năm:</label>-->
+<!--            <input type="number" id="year" name="year" class="form-control" min="2000" required>-->
+<!--        </div>-->
+<!--        <div class="col-auto d-flex justify-content-center">-->
+<!--            <button class="btn btn-primary btn-stats" type="submit">Tạo thống kê- Báo cáo</button>-->
+<!--        </div>-->
+<!--    </form>-->
+    <form id="reportForm" class="row g-3 align-items-center mb-4">
+    <div class="col-auto w-25">
+        <label for="month" class="form-label">Tháng:</label>
+        <input type="number" id="month" name="month" class="form-control w-100" min="1" max="12" required>
+    </div>
+    <div class="col-auto w-25">
+        <label for="year" class="form-label">Năm:</label>
+        <input type="number" id="year" name="year" class="form-control w-100" min="2000" required>
+    </div>
+    <div class="col-auto w-100 mt-3">
+        <button class="btn btn-primary btn-stats w-25 h-25 " type="submit">Tạo thống kê- Báo cáo</button>
+    </div>
+</form>
 
-<div class="row">
-    <div class="col-md-7 col-12"></div>
-    <div class="col-md-5 col-12">
-        <canvas id="myChart">
-            <table class="table">
-                <tr>
-                    <th>Id</th>
-                    <th>Tên phòng</th>
-                    <th>Tổng doanh thu</th>
-                </tr>
-                {% for s in stats %}
-                <tr>
-                    <td>{{ s[0] }}</td>
-                    <td>{{ s[1] }}</td>
-                    <td>{{ s[2] }} VND</td>
-                </tr>
-                {% endfor %}
-            </table>
-            <table class="table">
-                <tr>
-                    <th>Loại phòng</th>
-                    <th>Tổng phòng</th>
-                    <th>Tổng lượng được đặt</th>
-                    <th>Tổng</th>
-                </tr>
-                {% for s in usage_stat %}
-                <tr>
-                    <td>{{ s[0] }}</td>
-                    <td>{{ s[1] }}</td>
-                    <td>{{ s[2] }}</td>
-                    <td>{{ s[3] }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </canvas>
+
+    <!-- Khu vực báo cáo doanh thu -->
+    <div id="revenueReport" class="mb-5">
+        <h3 class="text-primary">BÁO CÁO DOANH THU THEO THÁNG</h3>
+        <canvas id="revenueChart" class="mb-3"></canvas>
+        <table id="revenueTable" class="table table-bordered table-striped">
+            <!-- Nội dung bảng sẽ được thêm bằng JavaScript -->
+        </table>
+    </div>
+
+    <!-- Khu vực báo cáo sử dụng phòng -->
+    <div id="usageReport">
+        <h3 class="text-primary">BÁO CÁO MẬT ĐỘ SỬ DỤNG PHÒNG</h3>
+        <canvas id="usageChart" class="mb-3"></canvas>
+        <table id="usageTable" class="table table-bordered table-striped">
+            <!-- Nội dung bảng sẽ được thêm bằng JavaScript -->
+        </table>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    window.onload = function(){
-        const ctx = document.getElementById('myChart');
-            new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-              datasets: [{
-                label: '# of Votes',
-                data: [12, 19, 3, 5, 2, 3],
-                borderWidth: 1
-              }]
-            },
-            options: {
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              }
-            }
-        });
-    }
-</script>
+    document.querySelector('#reportForm').addEventListener('submit', async function (event) {
+    event.preventDefault(); // Ngăn form reload trang
 
+    const month = document.querySelector('#month').value;
+    const year = document.querySelector('#year').value;
+
+    try {
+        // Fetch dữ liệu báo cáo doanh thu và sử dụng phòng
+        const revenueData = await fetchData(`/api/reports/revenue?month=${month}&year=${year}`);
+        const usageData = await fetchData(`/api/reports/usage?month=${month}&year=${year}`);
+
+        // Cập nhật biểu đồ và bảng doanh thu
+        updateRevenueChart(revenueData.revenue_stats);
+        updateTable('revenueTable', revenueData.revenue_stats, ['Loại phòng', 'Doanh thu', 'Số lượt thuê', 'Tỷ lệ']);
+
+        // Cập nhật biểu đồ và bảng mật độ sử dụng phòng
+        updateUsageChart(usageData.usage_stats);
+        updateTable('usageTable', usageData.usage_stats, ['Phòng', 'Số ngày thuê', 'Tỷ lệ']);
+
+    } catch (error) {
+        console.error('Error fetching report data:', error);
+    }
+});
+
+// Chức năng lấy dữ liệu từ API
+async function fetchData(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return response.json();
+}
+
+// Chức năng cập nhật biểu đồ doanh thu
+function updateRevenueChart(data) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(stat => stat.room_type),
+            datasets: [{
+                label: 'Revenue',
+                data: data.map(stat => stat.revenue),
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+}
+
+// Chức năng cập nhật biểu đồ sử dụng
+function updateUsageChart(data) {
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: data.map(stat => stat.room_name),
+            datasets: [{
+                data: data.map(stat => stat.days_used),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true }
+    });
+}
+
+// Chức năng cập nhật bảng với dữ liệu
+function updateTable(tableId, data, headers) {
+    const table = document.getElementById(tableId);
+    table.innerHTML = '';
+    const headerRow = table.insertRow();
+    headers.forEach(header => {
+        const cell = headerRow.insertCell();
+        cell.textContent = header;
+    });
+
+    data.forEach(stat => {
+        const row = table.insertRow();
+        headers.forEach(header => {
+            const cell = row.insertCell();
+            cell.textContent = stat[header.replace(' ', '_').toLowerCase()] || '';
+        });
+    });
+}
+
+
+</script>
 {% endblock %}

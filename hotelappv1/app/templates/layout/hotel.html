@@ -10,9 +10,11 @@
             </p>
         </div>
     </div>
+    {% for hotel in hotels %}
     <div class="row mt-4">
         <div class="col-md-6">
-            <img src="https://via.placeholder.com/600x400" class="img-fluid rounded shadow" alt="Dream Hotel">
+            <img src="{{ hotel.images[3] }}" width="600" height="400"
+                 class="img-fluid rounded shadow" alt="Dream Hotel">
         </div>
         <div class="col-md-6">
             <h2>Về chúng tôi</h2>
@@ -32,20 +34,24 @@
     </div>
     <div class="row mt-4 text-center">
         <div class="col-md-4">
-            <img src="https://via.placeholder.com/150" class="img-fluid rounded-circle mb-3" alt="Phòng nghỉ cao cấp">
+            <img src="{{ hotel.images[1] }}" width="150px" height="150px"
+                 class="img-fluid rounded-circle mb-3" alt="Phòng nghỉ cao cấp">
             <h4>Phòng nghỉ cao cấp</h4>
             <p>Phòng nghỉ hiện đại, tiện nghi, đáp ứng mọi nhu cầu của khách hàng.</p>
         </div>
         <div class="col-md-4">
-            <img src="https://via.placeholder.com/150" class="img-fluid rounded-circle mb-3" alt="Ẩm thực đa dạng">
+            <img src="{{ hotel.images[0] }}" width="150px" height="150px"
+                 class="img-fluid rounded-circle mb-3" alt="Ẩm thực đa dạng">
             <h4>Ẩm thực đa dạng</h4>
             <p>Thưởng thức các món ăn từ nhiều nền ẩm thực trên thế giới.</p>
         </div>
         <div class="col-md-4">
-            <img src="https://via.placeholder.com/150" class="img-fluid rounded-circle mb-3" alt="Thư giãn & Giải trí">
+            <img src="{{ hotel.images[2] }}" width="150px" height="150px"
+                 class="img-fluid rounded-circle mb-3" alt="Thư giãn & Giải trí">
             <h4>Thư giãn & Giải trí</h4>
             <p>Trải nghiệm spa cao cấp, hồ bơi vô cực và các hoạt động giải trí khác.</p>
         </div>
     </div>
+    {% endfor %}
 </div>
 {% endblock %}

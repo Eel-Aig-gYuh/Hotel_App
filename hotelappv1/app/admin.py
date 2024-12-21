@@ -52,10 +52,8 @@ class LogoutView(MyView):
 class StatsView(MyView):
     @expose("/")
     def __index__(self):
-        stat = dao.revenue_stats()
-        stat_period = dao.period_stats()
-        usage_stats = dao.usage_of_room_type_stats()
-        return self.render('admin/stats.html', stats=stat, stat_period=stat_period, usage_stats=usage_stats)
+
+        return self.render('admin/stats.html')
 
 
 admin = Admin(app, name='Dream Hotel', template_mode='bootstrap4')

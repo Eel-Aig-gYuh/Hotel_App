@@ -72,7 +72,28 @@ function updateCart(room_id, obj) {
     })
 }
 
-function cancelBook(){
+function cancelBook(booking_id) {
+    if (confirm("Bạn có chắc muốn hủy phòng không?") === true) {
+        fetch(`/api/carts/${booking_id}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 200) {
+                alert(data.msg || "Hủy phòng thành công!");
+                location.reload();
+            } else {
+                alert(data.err_msg || "Không thể hủy phòng!");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Đã xảy ra lỗi khi hủy phòng!");
+        });
+    }
 }
 
 function deleteCart(room_id) {

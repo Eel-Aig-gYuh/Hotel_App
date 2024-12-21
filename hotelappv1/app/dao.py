@@ -3,6 +3,7 @@ from calendar import month
 import datetime
 
 from django.utils.datetime_safe import datetime
+from flask import jsonify, request
 from sqlalchemy import func
 
 from models import Room, User, Staff, Hotel, Customer, RoomType, Rule, Image, Service, Bill, BillDetail, Booking, Comment, BookingStatus
@@ -130,7 +131,7 @@ def load_is_book_of_user():
                               .select_from(Booking)
                               .join(Room, Booking.room_id == Room.id)
                               .join(RoomType, Room.room_type_id == RoomType.id)
-                              .filter(Booking.status == 'CONFIRMED'))
+                              )
 
     return available_booking_room.all()
 
@@ -207,8 +208,8 @@ def load_room_type(room_id=None, room_style=None, check_in=None, check_out=None,
 
     return room_types_with_available_rooms.all()
 
-def load_hotel():
-    return Hotel.query.order_by('id').all()
+def load_hotel(hotel_id=None):
+    return Hotel.query.order_by('id').filter(Hotel.id.__eq__(hotel_id)).all()
 
 def load_img(type_img):
     img = Image.query.filter(Image.uri.contains(type_img)).all()
@@ -317,6 +318,75 @@ def usage_of_room_type_stats():
 
     return usage_data
 
+@app.route('/api/reports/revenue', methods=['GET'])
+def report_revenue():
+    try:
+        month = int(request.args.get('month'))
+        year = int(request.args.get('year'))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid month or year"}), 400
+
+    revenue_stats = db.session.query(
+        RoomType.name.label('room_type'),
+        func.sum(BillDetail.amount * BillDetail.unit_price).label('revenue'),
+        func.count(BillDetail.booking_id).label('booking_count')
+    ).join(Room, RoomType.id == Room.room_type_id) \
+        .join(Booking, Room.id == Booking.room_id) \
+        .join(BillDetail, Booking.id == BillDetail.booking_id) \
+        .filter(func.month(Booking.checkin_date) == month, func.year(Booking.checkin_date) == year) \
+        .group_by(RoomType.name).all()
+
+    total_revenue = sum(row.revenue for row in revenue_stats)
+
+    data = {
+        "month": month,
+        "year": year,
+        "revenue_stats": [
+            {
+                "room_type": row.room_type,
+                "revenue": row.revenue,
+                "booking_count": row.booking_count,
+                "percentage": round(row.revenue / total_revenue * 100, 2) if total_revenue > 0 else 0
+            }
+            for row in revenue_stats
+        ],
+        "total_revenue": total_revenue
+    }
+    print(data)
+    return jsonify(data)
+
+
+@app.route('/api/reports/usage', methods=['GET'])
+def report_usage():
+    try:
+        month = int(request.args.get('month'))
+        year = int(request.args.get('year'))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid month or year"}), 400
+
+    usage_stats = db.session.query(
+        Room.name.label('room_name'),
+        func.sum(func.datediff(Booking.checkout_date, Booking.checkin_date)).label('days_used')
+    ).join(Booking, Room.id == Booking.room_id) \
+        .filter(func.month(Booking.checkin_date) == month, func.year(Booking.checkin_date) == year) \
+        .group_by(Room.name).all()
+
+    total_days_used = sum(row.days_used for row in usage_stats)
+
+    data = {
+        "month": month,
+        "year": year,
+        "usage_stats": [
+            {
+                "room_name": row.room_name,
+                "days_used": row.days_used,
+                "percentage": round(row.days_used / total_days_used * 100, 2) if total_days_used > 0 else 0
+            }
+            for row in usage_stats
+        ]
+    }
+    print(data)
+    return jsonify(data)
 
 if __name__ == '__main__':
     with app.app_context():

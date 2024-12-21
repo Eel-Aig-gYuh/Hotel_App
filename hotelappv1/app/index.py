@@ -9,7 +9,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS, BOOKING_STATUS_LABELS
 from utils import cart_stats, format_date
 from urllib.parse import urlencode
-from models import Staff, Customer, User
+from models import Staff, Customer, User, BookingStatus
 
 
 @app.context_processor
@@ -454,6 +454,7 @@ def pay_process():
     booking_data = []
     for booking, room, room_type in book_room_is_paid:
         booking_data.append({
+            'booking_id': booking.id,
             'room_name': room.name,
             'room_type': room_type.name,
             'checkin_date': booking.checkin_date.strftime('%d-%m-%Y'),
@@ -461,6 +462,8 @@ def pay_process():
             'price': room_type.price_per_night,
             'status': booking.status
         })
+
+    print(booking_data)
 
     return render_template('layout/pay.html',
                            ROOM_TYPE_LABELS=ROOM_TYPE_LABELS, BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS,
@@ -479,6 +482,27 @@ def delete_cart(room_id):
     session['cart'] = cart
 
     return jsonify(cart_stats(cart))
+
+@app.route('/api/carts/<booking_id>', methods=['put'])
+def cancel_room(booking_id):
+    try:
+
+        book_rooms = dao.load_is_book_of_user()
+
+        for bookings, room, room_type in book_rooms:
+            if bookings.id.__eq__(booking_id):
+
+                bookings.status = BookingStatus.CANCELED
+
+                db.session.commit()
+                return jsonify({'status': 200, 'msg': 'Hủy phòng thành công!'})
+
+        return jsonify({'status': 404, 'err_msg': 'Không tìm thấy phòng để hủy!'})
+
+    except Exception as ex:
+        print(str(ex))
+        return jsonify({'status': 500, 'err_msg': 'Đã xảy ra lỗi khi hủy phòng!'})
+
 
 @app.route('/api/carts/<room_id>', methods=['put'])
 def update_cart(room_id):
@@ -524,11 +548,12 @@ def pay():
         return jsonify({'status': 500, 'err_msg': f'Phòng hiện tại {room_names} không có sẵn, vui lòng chọn phòng khác !'})
 
 
-@app.route('/create-checkout-session', methods=['POST'])
+@app.route('/create-checkout-session', methods=['post'])
 def create_checkout_session():
     try:
-        # Get cart data
-        cart = request.get_json()
+        data = request.json
+        selected_room_ids = data.get('selected_room_ids', [])
+
         print(f"Received cart: {cart} (Type: {type(cart)})")
 
         # Handle improperly sent JSON string
@@ -616,7 +641,7 @@ def add_comment(room_id, room_name, room_style, room_price, room_capacity, check
 # Route cho trang Khách sạn
 @app.route('/hotel')
 def hotel_process():
-    hotel = dao.load_hotel()
+    hotel = dao.load_hotel(hotel_id=1)
 
     return render_template('layout/hotel.html', hotels=hotel)
 
