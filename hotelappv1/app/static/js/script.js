@@ -1,15 +1,18 @@
 const bookedRoomCheckboxes = document.querySelectorAll('#bookedRoomsTable tbody tr td input[type="checkbox"]');
 
 function addToCart(room_id, room_name, room_type_name, room_type_price_per_night, room_type_capacity, checkin_date, checkout_date) {
+    console.info("hàm addToCart đã được gọi !");
     // Get the cart from sessionStorage
     let cart = JSON.parse(sessionStorage.getItem('cart')) || {};
 
+    console.infor("bug in check if already in cart")
     // Check if the room is already in the cart
     if (cart[room_id]) {
+        // && ( booking_data['checkin_date'] > checkout && booking_data['checkout_date'] < checkin )
         alert('Phòng đã có trong giỏ hàng!');
         console.info(cart)
 
-        return; // Exit without adding the room again
+        // return; // Exit without adding the room again
     }
 
     // Add the room to the cart
@@ -155,6 +158,18 @@ function pay(){
             .then(data => {
                 if (data.status === 200) {
                     alert(data.msg || "Thanh toán thành công!");
+                    delete cart[item_id];
+
+                    // Optionally, remove the item from the UI if it's displayed
+                    const cartItemElement = document.getElementById(`cart${item_id}`);
+                    if (cartItemElement) {
+                        cartItemElement.style.display = "none";  // Hide the cart item element
+                    }
+
+                    // Save the updated cart back to sessionStorage
+                    sessionStorage.setItem('cart', JSON.stringify(cart));
+
+                    console.log(`Đã xóa thành công phòng ${item_id} ra khỏi cart.`);
                     location.reload();
                 } else {
                     alert(data.err_msg || "Thanh toán không thành công!");
@@ -162,7 +177,7 @@ function pay(){
             })
             .catch(error => {
                 console.error("Error:", error);
-                alert("Đã xảy ra lỗi khi thanh toán!");
+                alert("Đã xảy ra lỗi khi thanh toán");
             });
     }
 }

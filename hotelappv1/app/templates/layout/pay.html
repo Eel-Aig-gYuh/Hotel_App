@@ -26,9 +26,9 @@
                 <td>{{ room.checkin_date}}</td>
                 <td>{{ room.checkout_date}}</td>
                 <td>{{ "{:,.0f}".format(room.room_type_price_per_night).replace(',', '.') }} VND </td>
-                <td></td>
+                <td>BOOKING_STATUS_LABELS.get(1, "Khác")</td>
                 <td>
-                    <button class="btn btn-outline-danger" onclick="deleteCart({{room.room_id}})">&times; Hủy đặt phòng</button>
+                    <button class="btn btn-outline-danger" onclick="deleteCart({{room.room_id}})">&times;</button>
                 </td>
             </tr>
 
@@ -55,5 +55,49 @@
     {% else %}
         <div class="alert alert-info mt-1">Không có sản phẩm trong giỏ !</div>
     {% endif %}
+
+
+
+{% if current_user.is_authenticated %}
+<h4 class="mt-5">Danh sách phòng đã thanh toán</h4>
+    {% if 'cart' in session %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col"><input type="checkbox" ></th>
+                <th scope="col">Số phòng</th>
+                <th scope="col">Loại phòng</th>
+                <th scope="col">Ngày nhận</th>
+                <th scope="col">Ngày trả</th>
+                <th scope="col">Đơn giá</th>
+                <th scope="col">Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% set sum = 0 %}
+            {% for booking in book_rooms %}
+            <tr data-price="{{ room.room_type_price_per_night }}" >
+                <td><input type="checkbox" data-room-id="{{ room.room_id }}" class="room-checkbox"></td>
+                <td>{{ booking.room_name }}</td>
+                <td>{{ ROOM_TYPE_LABELS.get(booking.room_type.value, "Khác") }}</td>
+                <td>{{ booking.checkin_date }}</td>
+                <td>{{ booking.checkout_date }}</td>
+                <td>{{ "{:,.0f}".format(booking.price).replace(',', '.') }} VND</td>
+                <td>{{ BOOKING_STATUS_LABELS.get(booking.status.value, "Khác") }}</td>
+                <td>
+                    <button class="btn btn-outline-danger" onclick="deleteCart({{room.room_id}})">&times; Hủy đặt phòng</button>
+                </td>
+            </tr>
+
+            {% endfor %}
+            </tbody>
+        </table>
+
+</div>
+    {% else %}
+        <div class="alert alert-info mt-1">Không có phòng đã được đặt !</div>
+    {% endif %}
+
+{% endif %}
 
 {% endblock %}

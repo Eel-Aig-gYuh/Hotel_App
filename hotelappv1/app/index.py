@@ -1,6 +1,5 @@
 import datetime
 import math
-import json
 import stripe
 import cloudinary.uploader
 
@@ -10,7 +9,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS, BOOKING_STATUS_LABELS
 from utils import cart_stats, format_date
 from urllib.parse import urlencode
-from models import Staff, Customer, User, BookingStatus
+from models import Staff, Customer, User
 
 
 @app.context_processor
@@ -45,6 +44,8 @@ def logout_process():
 
 @app.route("/login", methods=['get', 'post'])
 def login_process():
+    err_msg = ''
+
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
@@ -360,6 +361,24 @@ def room_detail(room_id, room_name, room_style, room_price, room_capacity, check
 
     _, room_type = room_available[0]
 
+    # book_rooms = dao.load_is_book_of_user()
+    # booking_data = []
+    # for bill_book, bill_room, bill_room_type in book_rooms:
+    #     booking_data.append({
+    #         'booking_id': bill_book.id,
+    #         'room_id': bill_room.id,
+    #         'room_name': bill_room.name,
+    #         'room_type': bill_room_type.name,
+    #         'checkin_date': bill_book.checkin_date.strftime('%d-%m-%Y'),
+    #         'checkout_date': bill_book.checkout_date.strftime('%d-%m-%Y'),
+    #         'price_per_night': bill_room_type.price_per_night,
+    #         'status': bill_book.status
+    #     })
+
+
+    # print(booking_data)
+
+
     comments = dao.load_comment(room_type.id)
     # print(room.id)
     # print(room_available)
@@ -375,8 +394,8 @@ def room_detail(room_id, room_name, room_style, room_price, room_capacity, check
                            checkin=checkin,
                            checkout=checkout,
                            images=room_type.images,
-                           comments = comments,
-                           room_type_id = room_type.id,
+                           comments=comments,
+                           room_type_id=room_type.id,
                            ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
                            BED_TYPE_LABELS=BED_TYPE_LABELS,
                            AREA_LABELS=AREA_LABELS)
@@ -388,6 +407,7 @@ def book_room(room_name):
     return redirect(url_for('room_process'))
 
 
+# Route cho trang Đã đặt
 # Route cho trang Đã đặt
 @app.route('/api/carts', methods=['post'])
 def add_to_cart():
@@ -430,8 +450,22 @@ def add_to_cart():
 
 @app.route('/pay')
 def pay_process():
+    book_room_is_paid = dao.load_is_book_of_user()
+
+    booking_data = []
+    for booking, room, room_type in book_room_is_paid:
+        booking_data.append({
+            'room_name': room.name,
+            'room_type': room_type.name,
+            'checkin_date': booking.checkin_date.strftime('%d-%m-%Y'),
+            'checkout_date': booking.checkout_date.strftime('%d-%m-%Y'),
+            'price': room_type.price_per_night,
+            'status': booking.status
+        })
+
     return render_template('layout/pay.html',
-                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS, BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS)
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS, BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS,
+                           book_rooms=booking_data)
 
 
 @app.route('/api/carts/<room_id>', methods=['delete'])
@@ -487,7 +521,8 @@ def pay():
         return jsonify({'status': 200, 'msg': 'Thanh toán thành công!'})
     except Exception as ex:
         print(str(ex))
-        return jsonify({'status': 500, 'err_msg': 'Đã xảy ra lỗi trong quá trình thanh toán.'})
+        room_names = ', '.join([room.get('name', f'Room ID {room['room_name']}') for room_id, room in selected_rooms.items()])
+        return jsonify({'status': 500, 'err_msg': f'Phòng hiện tại {room_names} không có sẵn, vui lòng chọn phòng khác !'})
 
 
 # @app.route('/delete-selected-rooms', methods=['POST'])

@@ -1,10 +1,11 @@
 import hashlib
 from calendar import month
+import datetime
 
 from django.utils.datetime_safe import datetime
 from sqlalchemy import func
 
-from models import Room, User, Staff, Hotel, Customer, RoomType, Rule, Image, Service, Bill, BillDetail, Booking, Comment
+from models import Room, User, Staff, Hotel, Customer, RoomType, Rule, Image, Service, Bill, BillDetail, Booking, Comment, BookingStatus
 from app import db, app
 from flask_login import current_user
 
@@ -68,38 +69,44 @@ def add_booking_and_bill(cart):
             if stay_duration <= 0:
                 raise ValueError(f"Invalid check-in and check-out dates for room ID {room_id}.")
 
-            # Calculate the total amount
-            total_amount = room_type_price_per_night * quantity * stay_duration
+            book_room_available = load_book_room(room_id=room_id, room_style=room_type_name, check_in=checkin_date, check_out=checkout_date)
 
-            # Create a Booking object
-            booking = Booking(
-                checkin_date=checkin_date,
-                checkout_date=checkout_date,
-                total=total_amount,
-                customer_id=user_id,
-                room_id=room_id
-            )
-            db.session.add(booking)
-            db.session.flush()  # Ensure booking ID is generated
+            if book_room_available:
+                raise ValueError("Phòng hiện tại không còn trống. Vui lòng chọn phòng khác !")
 
-            # Create a Bill object
-            bill = Bill(
-                id=booking.id,  # Use the booking ID as the primary key for the Bill
-                customer_id=user_id,
-                payment_method="CHUYEN_KHOAN",  # Default payment method
-                active=True
-            )
-            db.session.add(bill)
-            db.session.flush()  # Ensure bill ID is generated
+            else:
+                # Calculate the total amount
+                total_amount = room_type_price_per_night * quantity * stay_duration
 
-            # Create a BillDetail object
-            bill_detail = BillDetail(
-                bill_id=bill.id,
-                room_id=room_id,
-                amount=quantity,
-                unit_price=room_type_price_per_night
-            )
-            db.session.add(bill_detail)
+                # Create a Booking object
+                booking = Booking(
+                    checkin_date=checkin_date,
+                    checkout_date=checkout_date,
+                    total=total_amount,
+                    customer_id=user_id,
+                    room_id=room_id
+                )
+                db.session.add(booking)
+                db.session.flush()  # Ensure booking ID is generated
+
+                # Create a Bill object
+                bill = Bill(
+                    id=booking.id,  # Use the booking ID as the primary key for the Bill
+                    customer_id=user_id,
+                    payment_method="CHUYEN_KHOAN",  # Default payment method
+                    active=True
+                )
+                db.session.add(bill)
+                db.session.flush()  # Ensure bill ID is generated
+
+                # Create a BillDetail object
+                bill_detail = BillDetail(
+                    bill_id=bill.id,
+                    room_id=room_id,
+                    amount=quantity,
+                    unit_price=room_type_price_per_night
+                )
+                db.session.add(bill_detail)
 
         # Commit all transactions to the database
         db.session.commit()
@@ -118,6 +125,27 @@ def add_comment(content, room_type_id):
 
     return c
 
+def load_is_book_of_user():
+    available_booking_room = (db.session.query(Booking, Room, RoomType)
+                              .select_from(Booking)
+                              .join(Room, Booking.room_id == Room.id)
+                              .join(RoomType, Room.room_type_id == RoomType.id)
+                              .filter(Booking.status == 'CONFIRMED'))
+
+    return available_booking_room.all()
+
+def load_book_room(room_id=None, room_style=None, check_in=None, check_out=None):
+    available_room = (db.session.query(Booking)
+                           .filter(
+                               Booking.room_id == room_id,
+                               Booking.status == BookingStatus.CONFIRMED,
+                               Booking.checkin_date < check_out,
+                               Booking.checkout_date > check_in
+                           )
+    )
+
+    return available_room.all()
+
 def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=None, adult=None, children=None, room_in_cart=None, page=1):
     available_room = db.session.query(Room, RoomType).join(RoomType).filter(Room.is_available == True)
 
@@ -130,22 +158,23 @@ def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=N
     if room_style:
         available_room = available_room.filter(RoomType.name.__eq__(room_style))
 
-    if check_in and check_out:
-        available_room = available_room.filter(
-            ~Room.id.in_(
-                db.session.query(Booking.room_id)
-                .filter(
-                    Booking.checkin_date < check_out,
-                    Booking.checkout_date > check_in
-                )
-            )
-        )
-
     if adult:
         available_room = available_room.filter(RoomType.capacity>=(int(adult)+int(children)//2))
 
     if room_in_cart:
         available_room = available_room.filter(~Room.id.in_(room_in_cart))
+
+    if check_in or check_out:
+        available_room = available_room.filter(
+            ~Room.id.in_(
+                db.session.query(Booking.room_id)
+                .filter(
+                    Booking.status.__eq__(BookingStatus.CONFIRMED),
+                    Booking.checkin_date <= check_out,
+                    Booking.checkout_date >= check_in
+                )
+            )
+        )
 
     return available_room.all()
 
@@ -193,6 +222,8 @@ def load_service():
 def load_comment(room_type_id):
     return Comment.query.filter(Comment.room_type_id.__eq__(room_type_id)).all()
 
+def get_booking_by_id(id):
+    return Booking.query.filter(Booking.customer_id.__eq__(id)).first()
 
 def get_user_by_id(ids):
     return User.query.get(ids)

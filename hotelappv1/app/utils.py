@@ -14,5 +14,4 @@ def cart_stats(cart):
     }
 
 def format_date(date_str):
-    # Helper function to format date
     return datetime.strptime(date_str, '%Y-%m-%d').date()
