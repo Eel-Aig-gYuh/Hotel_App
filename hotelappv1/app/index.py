@@ -408,7 +408,6 @@ def book_room(room_name):
 
 
 # Route cho trang Đã đặt
-# Route cho trang Đã đặt
 @app.route('/api/carts', methods=['post'])
 def add_to_cart():
     # lấy giỏ trong session.
@@ -523,51 +522,6 @@ def pay():
         print(str(ex))
         room_names = ', '.join([room.get('name', f'Room ID {room['room_name']}') for room_id, room in selected_rooms.items()])
         return jsonify({'status': 500, 'err_msg': f'Phòng hiện tại {room_names} không có sẵn, vui lòng chọn phòng khác !'})
-
-
-# @app.route('/delete-selected-rooms', methods=['POST'])
-# def delete_selected_rooms():
-#     data = request.get_json()
-#     rooms = data.get('rooms', [])
-#
-#     if not rooms:
-#         return jsonify({"status": "error", "message": "No rooms selected"})
-#
-#     try:
-#         # Đọc dữ liệu từ booking_history.json
-#         with open('data/booking_history.json', 'r', encoding='utf-8') as file:
-#             history_data = json.load(file)
-#
-#         # Đọc dữ liệu từ rooms.json
-#         with open('data/rooms.json', 'r', encoding='utf-8') as rooms_file:
-#             room_data = json.load(rooms_file)
-#
-#         # Các bước xử lý phòng cần xóa
-#         deleted_rooms = []
-#         for room in rooms:
-#             room_name = room.get('name')
-#
-#             # Tìm phòng trong lịch sử booking
-#             delete_room = next((r for r in history_data if r['name'] == room_name), None)
-#
-#             if delete_room:
-#                 # Thêm phòng vào danh sách đã xóa
-#                 deleted_rooms.append(delete_room)
-#                 # Xóa phòng khỏi booking_history.json
-#                 history_data = [r for r in history_data if r['name'] != room_name]
-#
-#         # Nếu có phòng bị xóa, cập nhật file
-#         if deleted_rooms:
-#             # Cập nhật file rooms.json
-#             room_data.extend(deleted_rooms)
-#
-#         return jsonify({
-#             "status": "success",
-#             "message": "Rooms deleted successfully",
-#             "reload": True  # Chỉ thị yêu cầu tải lại trang
-#         })
-#     except Exception as e:
-#         return jsonify({"status": "error", "message": str(e)})
 
 
 @app.route('/create-checkout-session', methods=['POST'])

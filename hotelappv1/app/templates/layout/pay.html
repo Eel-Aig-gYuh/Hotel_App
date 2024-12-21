@@ -26,7 +26,7 @@
                 <td>{{ room.checkin_date}}</td>
                 <td>{{ room.checkout_date}}</td>
                 <td>{{ "{:,.0f}".format(room.room_type_price_per_night).replace(',', '.') }} VND </td>
-                <td>BOOKING_STATUS_LABELS.get(1, "Khác")</td>
+                <td>{{ BOOKING_STATUS_LABELS.get(1, "Khác") }}</td>
                 <td>
                     <button class="btn btn-outline-danger" onclick="deleteCart({{room.room_id}})">&times;</button>
                 </td>
@@ -38,7 +38,7 @@
 
 
         <div class="d-flex justify-content-end">
-            <button class="btn btn-outline-danger btn-delete">Xóa</button>
+<!--            <button class="btn btn-outline-danger btn-delete">Xóa</button>-->
             <a href="{{ url_for('room_process') }}"><button class="btn btn-outline-primary mx-2">Bạn muốn đặt thêm</button></a>
             {% if current_user.is_authenticated %}
                 <button class="btn btn-success" onclick="pay()">Thanh toán</button>

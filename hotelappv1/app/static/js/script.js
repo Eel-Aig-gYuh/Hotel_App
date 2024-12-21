@@ -1,18 +1,15 @@
 const bookedRoomCheckboxes = document.querySelectorAll('#bookedRoomsTable tbody tr td input[type="checkbox"]');
 
 function addToCart(room_id, room_name, room_type_name, room_type_price_per_night, room_type_capacity, checkin_date, checkout_date) {
-    console.info("hàm addToCart đã được gọi !");
     // Get the cart from sessionStorage
     let cart = JSON.parse(sessionStorage.getItem('cart')) || {};
 
-    console.infor("bug in check if already in cart")
     // Check if the room is already in the cart
     if (cart[room_id]) {
-        // && ( booking_data['checkin_date'] > checkout && booking_data['checkout_date'] < checkin )
         alert('Phòng đã có trong giỏ hàng!');
         console.info(cart)
 
-        // return; // Exit without adding the room again
+        return; // Exit without adding the room again
     }
 
     // Add the room to the cart
@@ -73,6 +70,9 @@ function updateCart(room_id, obj) {
     }).then(res => res.json()).then(data => {
         updateUI(data)
     })
+}
+
+function cancelBook(){
 }
 
 function deleteCart(room_id) {
