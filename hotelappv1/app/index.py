@@ -4,13 +4,13 @@ import stripe
 import cloudinary.uploader
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
-from sqlalchemy import func
 
 from app import dao, login, app, db
 from flask_login import login_user, logout_user, current_user, login_required
+
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS, BOOKING_STATUS_LABELS
 from utils import cart_stats, format_date
-from models import Staff, Customer, User, BookingStatus, Room, Booking
+from models import Staff, Customer, User, BookingStatus
 
 
 @app.context_processor
@@ -32,8 +32,9 @@ def load_account(user_id):
 def index():
     # đây là nơi lưu biến để gửi ra hiển thị ngoài màn hình.
     images = dao.load_img("Carousel")
+    is_staff = dao.is_staff(current_user)
 
-    return render_template('index.html', image=images)
+    return render_template('index.html', image=images, is_staff=is_staff)
 
 
 # =================== login/logout ===================
@@ -50,11 +51,13 @@ def login_process():
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
+        remember = request.form.get('rememberMe') == 'on'
+
 
         account = dao.auth_user(username=username, password=password)
 
         if account:
-            login_user(account)
+            login_user(account, remember=remember)
             next = request.args.get('next')
             return redirect(url_for('index') if next is None else next)
 
@@ -263,6 +266,46 @@ def profile():
 
     return render_template('layout/profile.html', user=user, profile=profile)
 
+# =============== staff ===============
+@app.route('/staff', methods=['get'])
+def staff_process():
+    is_staff = dao.is_staff(current_user)
+    print(is_staff)
+
+    page = request.args.get('page', 1)
+    cate_id = request.args.get('category_id')
+    kw = request.args.get('kw')
+    page_size = app.config["PAGE_SIZE"]
+    total = dao.count_book_rooms()
+
+    book_list = dao.load_is_book_of_user(customer_id=kw, page=int(page))
+    booking_data = []
+    for booking, room, room_type in book_list:
+        booking_data.append({
+            'customer_id': booking.customer_id,
+            'customer_name': booking.cus_booking.last_name + " " + booking.cus_booking.first_name,
+            'booking_id': booking.id,
+            'room_name': room.name,
+            'room_type': room_type.name,
+            'checkin_date': booking.checkin_date.strftime('%d-%m-%Y'),
+            'checkout_date': booking.checkout_date.strftime('%d-%m-%Y'),
+            'price': room_type.price_per_night,
+            'status': booking.status
+        })
+    # print(book_list)
+
+    return render_template('staff/staff.html',
+                           is_staff=is_staff,
+                           book_lists=booking_data,
+                           pages=math.ceil(total / page_size),
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
+                           BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS)
+
+@app.route('/staff/stats', methods=['get', 'post'])
+def staff_stats_process():
+
+    return render_template('/staff/staff_stats.html')
+
 
 # =============== phong nghi ===============
 @app.route('/rooms/search_room', methods=['get', 'post'])
@@ -321,6 +364,7 @@ def search_process():
 
 @app.route('/rooms', methods=['get', 'post'])
 def room_process():
+    is_staff = dao.is_staff(current_user)
     kw = request.args.get('kw')
     room_id = request.args.get('room_type')
     page = request.args.get('page', 1)
@@ -346,6 +390,7 @@ def room_process():
                            rooms=room, pages=math.ceil(total / page_size),
                            checkin=check_in if check_in else "checkin",
                            checkout=check_out if check_out else "checkout",
+                           is_staff=is_staff,
                            ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
                            BED_TYPE_LABELS=BED_TYPE_LABELS,
                            no_rooms_message=no_rooms_message)
@@ -450,6 +495,7 @@ def add_to_cart():
 
 @app.route('/pay')
 def pay_process():
+    is_staff = dao.is_staff(current_user)
     if current_user.is_authenticated:
         book_room_is_paid = dao.load_is_book_of_user(current_user.id)
     else:
@@ -470,7 +516,9 @@ def pay_process():
     # print(booking_data)
 
     return render_template('layout/pay.html',
-                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS, BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS,
+                           is_staff=is_staff,
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
+                           BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS,
                            book_rooms=booking_data)
 
 
@@ -490,12 +538,16 @@ def delete_cart(room_id):
 @app.route('/api/carts/<booking_id>', methods=['put'])
 def cancel_room(booking_id):
     try:
-
-        book_rooms = dao.load_is_book_of_user()
+        if dao.is_staff(current_user):
+            booking = dao.get_booking_by_id(booking_id)
+            book_rooms = dao.load_is_book_of_user(customer_id=booking.customer_id if booking else None)
+        else:
+            book_rooms = dao.load_is_book_of_user(current_user.id)
 
         for bookings, room, room_type in book_rooms:
-            if bookings.id.__eq__(booking_id):
-
+            if bookings.id == int(booking_id):
+                print(bookings.id)
+                print(bookings.id, bookings.status)
                 bookings.status = BookingStatus.CANCELED
 
                 db.session.commit()
@@ -507,6 +559,34 @@ def cancel_room(booking_id):
         print(str(ex))
         return jsonify({'status': 500, 'err_msg': 'Đã xảy ra lỗi khi hủy phòng!'})
 
+@app.route('/api/carts/checkin/<booking_id>', methods=['put'])
+def check_in_room(booking_id):
+    try:
+        if dao.is_staff(current_user):
+            booking = dao.get_booking_by_id(booking_id)
+            book_rooms = dao.load_is_book_of_user(customer_id=booking.customer_id if booking else None)
+        else:
+            book_rooms = dao.load_is_book_of_user(current_user.id)
+
+        rule = dao.get_rule_by_name('Thời gian checkin')
+
+        for bookings, room, room_type in book_rooms:
+            if bookings.id == int(booking_id):
+                day_check_in = int((bookings.checkin_date - datetime.datetime.now()).days)
+                if day_check_in <= rule.value:
+                    bookings.status = BookingStatus.COMPLETED
+
+                    db.session.commit()
+                    return jsonify({'status': 200, 'msg': 'Nhận phòng thành công!'})
+
+                else:
+                    return jsonify({'status': 403, 'err_msg': 'Đã quá thời hạn nhận phòng!'})
+
+        return jsonify({'status': 404, 'err_msg': 'Không tìm thấy phòng để nhận phòng!'})
+
+    except Exception as ex:
+        print(str(ex))
+        return jsonify({'status': 500, 'err_msg': 'Đã xảy ra lỗi khi hủy phòng!'})
 
 @app.route('/api/carts/<room_id>', methods=['put'])
 def update_cart(room_id):
@@ -582,7 +662,7 @@ def create_checkout_session():
                     'currency': 'vnd',
                     'product_data': {
                         'name': f"Phòng {room['room_name']}",
-                        'description': f"Loại phòng: {room['room_type_name']}, Giá: {room['room_type_price_per_night']} VND",
+                        'description': f"Loại phòng: {ROOM_TYPE_LABELS.get(room['room_type_name'])}, Giá: {room['room_type_price_per_night']} VND",
                     },
                     'unit_amount': int(room['room_type_price_per_night']),
                 },
@@ -641,8 +721,9 @@ def add_comment(room_id, room_name, room_style, room_price, room_capacity, check
 @app.route('/hotel')
 def hotel_process():
     hotel = dao.load_hotel(hotel_id=1)
+    is_staff = dao.is_staff(current_user)
 
-    return render_template('layout/hotel.html', hotels=hotel)
+    return render_template('layout/hotel.html', hotels=hotel, is_staff=is_staff)
 
 
 # Route cho trang Cơ sở vật chất
@@ -650,14 +731,20 @@ def hotel_process():
 def facilities():
     service = dao.load_service()
     img_service = dao.load_img("CoSoVatChat")
+    is_staff = dao.is_staff(current_user)
 
-    return render_template('layout/facilities.html', services=service, images=img_service)
+    return render_template('layout/facilities.html',
+                           services=service,
+                           images=img_service,
+                           is_staff=is_staff)
 
 
 # Route cho trang Liên hệ
 @app.route('/contact')
 def contact():
-    return render_template('layout/contact.html')
+    is_staff = dao.is_staff(current_user)
+
+    return render_template('layout/contact.html', is_staff=is_staff)
 
 
 @app.route('/api/reports/revenue', methods=['GET'])
@@ -680,7 +767,7 @@ def report_revenue():
         "year": year,
         "revenue_stats": [
             {
-                "room_type": str(row['room_type']),
+                "room_type": ROOM_TYPE_LABELS.get(str(row['room_type'])),
                 "revenue": row['revenue'],
                 "booking_count": row['booking_count'],
                 "percentage": round(row['revenue'] / total_revenue * 100, 2) if total_revenue > 0 else 0
@@ -690,6 +777,9 @@ def report_revenue():
         "total_revenue": total_revenue
     }
     print(data)
+    for d in data['revenue_stats']:
+        print (d)
+
     print("done index")
     return jsonify(data)
 

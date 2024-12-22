@@ -14,7 +14,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/hotel
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 # check file sql
 # app.config["SQLALCHEMY_ECHO"] = True
-app.config["PAGE_SIZE"] = 4
+app.config["PAGE_SIZE"] = 5
 
 stripe.api_key = "sk_test_51QXAxiFyHL0TwlggzVyQhZn85ZNCLAhzoiTNpWWrZCRkSXQPAQvnxTOqhMCTonr4mtrBojrHYawt7Oza36vuVEev00yhxVPMEX"
 app.secret_key = 'GH33*1SD4P03M*0FTH3DR34MC1TY'

@@ -175,6 +175,7 @@ body{
 .nav-link:hover {
     color: #0077b6; /* Màu xanh sáng */
     transform: scale(1.045); /* Phóng to nhẹ */
+    /* background: #a1e3be, */
 }
 
 .nav-item {

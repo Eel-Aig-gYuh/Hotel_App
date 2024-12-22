@@ -28,8 +28,9 @@
     </div>
 </nav>
 
+
 <!-- Tabs -->
-<div class="container mt-3">
+<div class="container mt-4">
     <ul class="navbar-nav d-flex justify-content-center flex-row">
         <li class="nav-item mx-3"><a class="nav-link" href="/">Trang chủ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/hotel">Khách sạn</a></li>
@@ -37,6 +38,9 @@
         <li class="nav-item mx-3"><a class="nav-link" href="/facilities">Cơ sở vật chất</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/contact">Liên hệ</a></li>
         <li class="nav-item mx-3"><a class="nav-link" href="/pay"> Đã đặt &#128722; <span class="badge bg-danger cart-counter"> {{cart_stats.total_quantity}} </span></a></li>
+        {% if is_staff and current_user.is_authenticated %}
+        <li class="nav-item mx-3"><a class="nav-link" href="/staff">Tác vụ nhân viên</a></li>
+        {% endif %}
     </ul>
 </div>
 
@@ -78,6 +82,7 @@
         </div>
     </div>
 </div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {

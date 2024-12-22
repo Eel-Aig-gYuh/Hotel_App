@@ -1,0 +1,94 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+{% if is_staff and current_user.is_authenticated%}
+
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark mt-3">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-white " href="/">Trang chủ</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link text-white " href="{{url_for('staff_stats_process')}}">Thống kê - báo cáo</a>
+                    </li>
+                </ul>
+                <form method="get" action="/staff" class="d-flex">
+                    <input class="form-control me-2" type="text" name="kw" placeholder="Tìm theo mã khách hàng...">
+                    <button class="btn btn-primary" type="submit">Tìm</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <h4>Danh sách phòng đã đặt</h4>
+        {% if book_lists %}
+        {% if pages > 1 %}
+        <ul class="pagination mt-1">
+            {% for i in range(1, pages + 1) %}
+            <li class="page-item"><a class="page-link" href="/staff?page={{ i }}">{{ i }}</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <table class="table table-striped" id="bookedRoomsTable">
+            <thead>
+            <tr>
+                <th scope="col"><input type="checkbox" id="selectAllBookedRooms"></th>
+                <th scope="col">Mã khách hàng</th>
+                <th scope="col">Khách hàng</th>
+                <th scope="col">Số phòng</th>
+                <th scope="col">Loại phòng</th>
+                <th scope="col">Ngày nhận</th>
+                <th scope="col">Ngày trả</th>
+                <th scope="col">Đơn giá</th>
+                <th scope="col">Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% set sum = 0 %}
+            {% for room in book_lists %}
+            <tr data-price="{{ room.room_type_price_per_night }}" id="cart{{room.room_id}}">
+                <td><input type="checkbox" data-room-id="{{ room.room_id }}" class="room-checkbox"></td>
+                <td>{{ room.customer_id }}</td>
+                <td>{{ room.customer_name }}</td>
+                <td>{{ room.room_name }}</td>
+                <td>{{ ROOM_TYPE_LABELS.get(room.room_type.value) }}</td>
+                <td>{{ room.checkin_date}}</td>
+                <td>{{ room.checkout_date}}</td>
+                <td>{{ "{:,.0f}".format(room.price).replace(',', '.') }} VND</td>
+                <td class="text-danger {% if room.status.value == 3 %}{% else %} text-black{% endif %}">
+                    {{ BOOKING_STATUS_LABELS.get(room.status.value, "Khác") }}
+                </td>
+                <td>
+                    {% if room.status.value == 3 %}
+                        <button class="btn btn-outline-success">Chờ xử lí ...</button>
+                    {% else %}
+                        <button class="btn btn-outline-danger" onclick="cancelBook({{room.booking_id}})">Hủy phòng</button>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if room.status.value == 3 %}
+                        <button class="btn btn-danger btn-pay">Hoàn tiền</button>
+                    {% elif room.status.value == 4 %}
+
+                    {% else %}
+                        <button class="btn btn-success" onclick="checkInRoom({{room.booking_id}})">Nhận phòng</button>
+                    {% endif %}
+                </td>
+            </tr>
+
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Không tồn tại phòng đang được đặt.</p>
+        {% endif %}
+
+{% else %}
+    <p>404 PAGE NOT FOUND.</p>
+{% endif %}
+{% endblock %}

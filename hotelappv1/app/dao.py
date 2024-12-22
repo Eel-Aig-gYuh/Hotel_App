@@ -126,7 +126,12 @@ def add_comment(content, room_type_id):
 
     return c
 
-def load_is_book_of_user(customer_id=None):
+
+def is_staff(user):
+    return hasattr(user, 'staff_user') and user.staff_user
+
+
+def load_is_book_of_user(customer_id=None, page=1):
     available_booking_room = (db.session.query(Booking, Room, RoomType)
                               .select_from(Booking)
                               .join(Room, Booking.room_id == Room.id)
@@ -226,7 +231,17 @@ def load_service():
 def load_comment(room_type_id):
     return Comment.query.filter(Comment.room_type_id.__eq__(room_type_id)).all()
 
+def load_rule(id):
+    return Rule.query.filter(Rule.hotel_id.__eq__(id)).all()
+
+
+def get_rule_by_name(name):
+    return Rule.query.filter(Rule.name.contains(name)).first()
+
 def get_booking_by_id(id):
+    return Booking.query.get(id)
+
+def get_user_by_booking_id(id):
     return Booking.query.filter(Booking.customer_id.__eq__(id)).first()
 
 def get_user_by_id(ids):
@@ -254,6 +269,9 @@ def pagination(page=1):
 
 def count_rooms():
     return Room.query.count()
+
+def count_book_rooms():
+    return Booking.query.count()
 
 def calculate_stay_duration(checkin_date_str, checkout_date_str):
     """

@@ -41,7 +41,7 @@
 <!--            <button class="btn btn-outline-danger btn-delete">Xóa</button>-->
             <a href="{{ url_for('room_process') }}"><button class="btn btn-outline-primary mx-2">Bạn muốn đặt thêm</button></a>
             {% if current_user.is_authenticated %}
-                <button class="btn btn-success btn-pay">Thanh toán</button>
+                <button class="btn btn-success btn-pay">Thanh toán tiền cọc</button>
             {% else %}
                 <a href="/login?next={{url_for('pay_process')}}"><button class="btn btn-success">Vui lòng đăng nhập để tiến hành thanh toán</button></a>
             {% endif %}
@@ -59,7 +59,7 @@
 
 
 {% if current_user.is_authenticated %}
-<h4 class="mt-5">Danh sách phòng đã thanh toán</h4>
+<h4 class="mt-5">Lịch sử phòng đã thanh toán</h4>
     {% if book_rooms %}
         <table class="table table-striped">
             <thead>
@@ -85,7 +85,11 @@
                 <td>{{ "{:,.0f}".format(booking.price).replace(',', '.') }} VND</td>
                 <td>{{ BOOKING_STATUS_LABELS.get(booking.status.value, "Khác") }}</td>
                 <td>
-                    <button class="btn btn-outline-danger" onclick="cancelBook({{booking.booking_id}})">Hủy đặt phòng</button>
+                    {% if booking.status.value == 3 %}
+                        <button class="btn btn-outline-success" >Đang xử lí ...</button>
+                    {% else %}
+                        <button class="btn btn-outline-danger" onclick="cancelBook({{booking.booking_id}})">Hủy đặt phòng</button>
+                    {% endif %}
                 </td>
             </tr>
 

@@ -96,6 +96,30 @@ function cancelBook(booking_id) {
     }
 }
 
+function checkInRoom(booking_id) {
+    if (confirm("Khách hàng đã nhận phòng này?") === true) {
+        fetch(`/api/carts/checkin/${booking_id}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 200) {
+                alert(data.msg || "Nhận phòng thành công!");
+                location.reload();
+            } else {
+                alert(data.err_msg || "Không thể nhận phòng!");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Đã xảy ra lỗi khi nhận phòng!");
+        });
+    }
+}
+
 function deleteCart(room_id) {
     if (confirm("Bạn có chắc chắn muốn xóa không?") === true){
         fetch(`/api/carts/${room_id}`, {
