@@ -429,6 +429,7 @@ def room_detail(room_id, room_name, room_style, room_price, room_capacity, check
     # print(room.id)
     # print(room_available)
     # print(room_type.name)
+    print(room_type.services)
 
     return render_template('layout/room_detail.html',
                            room_id=room.id,
@@ -442,6 +443,7 @@ def room_detail(room_id, room_name, room_style, room_price, room_capacity, check
                            images=room_type.images,
                            comments=comments,
                            room_type_id=room_type.id,
+                           services=room_type.services,
                            ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
                            BED_TYPE_LABELS=BED_TYPE_LABELS,
                            AREA_LABELS=AREA_LABELS)

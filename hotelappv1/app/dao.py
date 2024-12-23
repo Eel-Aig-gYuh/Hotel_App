@@ -223,10 +223,10 @@ def load_img(type_img):
     img = Image.query.filter(Image.uri.contains(type_img)).all()
     return img
 
-def load_service():
-    service = db.session.query(Service).filter(Service.active==True).all()
+def load_service(room_type_id=None):
+    services = db.session.query(Service).filter(Service.active==True)
 
-    return service
+    return services.all()
 
 def load_comment(room_type_id):
     return Comment.query.filter(Comment.room_type_id.__eq__(room_type_id)).all()

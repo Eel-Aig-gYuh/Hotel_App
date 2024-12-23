@@ -235,9 +235,22 @@ class Booking(db.Model, TimestampMixin):
     room_id = Column(Integer, ForeignKey('room.id'), nullable=False)
     # relationship with booking_bill (one - to - one)
     bill = relationship('Bill', backref='booking_bill', uselist=False, lazy=True)
+    people = relationship('Person', backref='booking_person', lazy=True)
 
     def __str__(self):
         return self.id
+
+
+class Person(db.Model):
+    __tablename__ = 'person'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    CMND = Column(CHAR(12), unique=True, nullable=False)
+    address = Column(NVARCHAR(255), nullable=True)
+    is_foreign = Column(Boolean, default=False)
+
+    # relationship with person_booking (many - to - one)
+    booking_id = Column(Integer, ForeignKey('booking.id'), nullable=False)
 
 
 class Bill(db.Model, TimestampMixin):
