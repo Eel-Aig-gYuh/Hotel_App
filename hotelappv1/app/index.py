@@ -2,6 +2,7 @@ import datetime
 import math
 import stripe
 import cloudinary.uploader
+import asyncio
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 
@@ -605,7 +606,7 @@ def update_cart(room_id):
 
 @app.route('/api/pay', methods=['post'])
 @login_required
-def pay():
+async def pay():
     data = request.json
     selected_room_ids = data.get('selected_room_ids', [])
 
@@ -620,7 +621,7 @@ def pay():
 
     try:
         # Process selected rooms for booking and bill generation
-        dao.add_booking_and_bill(selected_rooms)
+        await asyncio.to_thread(dao.add_booking_and_bill, selected_rooms)
 
         # Remove selected rooms from the cart
         for room_id in selected_room_ids:
@@ -628,6 +629,7 @@ def pay():
 
         session['cart'] = cart
         return jsonify({'status': 200, 'msg': 'Thanh toán thành công!'})
+
     except Exception as ex:
         print(str(ex))
         room_names = ', '.join([room.get('name', f'Room ID {room['room_name']}') for room_id, room in selected_rooms.items()])
@@ -645,11 +647,18 @@ def create_checkout_session():
             return jsonify({'status': 400, 'err_msg': 'Vui lòng chọn ít nhất một phòng để thanh toán.'})
 
         cart = session.get('cart', {})
-        print(cart)
+        print("Đơn hàng:", cart)
 
         # Extract room_id values from the list of dictionaries
-        selected_room_ids = [room['room_id'] for room in selected_room_ids]
-        print("Extracted Room IDs:", selected_room_ids)
+        # selected_room_ids = [room['room_id'] for room in selected_room_ids]
+        # print("Extracted Room IDs:", selected_room_ids)
+
+        if isinstance(selected_room_ids[0], dict):
+            selected_room_ids = [room['room_id'] for room in selected_room_ids]
+            print("Extracted Room IDs:", selected_room_ids)
+        else:
+            # If selected_room_ids is already a list of room IDs
+            print("Selected Room IDs:", selected_room_ids)
 
         # Filter the cart to get the selected rooms
         selected_rooms = {room_id: room for room_id, room in cart.items() if room_id in selected_room_ids}
@@ -675,12 +684,8 @@ def create_checkout_session():
 
         print("Line Items: ", line_items)
 
-        # Prepare room details for success_url
-        room_ids = [room['room_id'] for room in selected_rooms.values()]
-        room_names = [room['room_name'] for room in selected_rooms.values()]
-
         # Create Stripe checkout session
-        stripe_session = stripe.checkout.Session.create(  # Corrected variable name
+        stripe_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
@@ -697,7 +702,9 @@ def create_checkout_session():
 
 @app.route('/payment-success', methods=['post', 'get'])
 def payment_success():
-    return render_template('/layout/pay.html', port=200)
+    return render_template('/layout/pay.html', port=200,
+                           ROOM_TYPE_LABELS=ROOM_TYPE_LABELS,
+                           BOOKING_STATUS_LABELS=BOOKING_STATUS_LABELS)
 
 
 @app.route(

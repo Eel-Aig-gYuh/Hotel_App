@@ -155,7 +155,7 @@ def load_book_room(room_id=None, room_style=None, check_in=None, check_out=None)
 
     return available_room.all()
 
-def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=None, adult=None, children=None, room_in_cart=None, page=1):
+def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=None, adult=1, children=None, room_in_cart=None, page=1):
     available_room = db.session.query(Room, RoomType).join(RoomType).filter(Room.is_available == True)
 
     if kw:
@@ -168,7 +168,15 @@ def load_room(kw=None, room_id=None, room_style=None, check_in=None, check_out=N
         available_room = available_room.filter(RoomType.name.__eq__(room_style))
 
     if adult:
-        available_room = available_room.filter(RoomType.capacity>=(int(adult)+int(children)//2))
+        try:
+            adult = int(adult) if adult else 0  # Default to 0 if empty
+            children = int(children) if children else 0  # Default to 0 if empty
+        except ValueError:
+            adult = 0  # Default to 0 if conversion fails
+            children = 0  # Default to 0 if conversion fails
+
+        # Perform the filtering logic
+        available_room = available_room.filter(RoomType.capacity >= (adult + (children // 2)))
 
     if room_in_cart:
         available_room = available_room.filter(~Room.id.in_(room_in_cart))
