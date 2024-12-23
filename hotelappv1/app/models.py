@@ -729,6 +729,270 @@ if __name__ == '__main__':
                 {"id": 36,
                  "uri": "https://res.cloudinary.com/dnqt29l2e/image/upload/v1733991052/Images/TabNavigation/TraiNghiem/fqmv0iuzcqhcsdetdqjk.jpg"},
             ],
+            "hotel_images": [
+                {
+                    "hotel_id": 1,
+                    "image_id": 9
+                },
+                {
+                    "hotel_id": 1,
+                    "image_id": 10
+                },
+                {
+                    "hotel_id": 1,
+                    "image_id": 11
+                },
+                {
+                    "hotel_id": 1,
+                    "image_id": 12
+                },
+            ],
+            "room_services": [
+                {
+                    "room_type_id": 4,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 5,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 6,
+                    "service_id": 2
+                },
+                {
+                    "room_type_id": 6,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 7,
+                    "service_id": 2
+                },
+                {
+                    "room_type_id": 7,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 8,
+                    "service_id": 2
+                },
+                {
+                    "room_type_id": 8,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 9,
+                    "service_id": 1
+                },
+                {
+                    "room_type_id": 9,
+                    "service_id": 2
+                },
+                {
+                    "room_type_id": 9,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 9,
+                    "service_id": 4
+                },
+                {
+                    "room_type_id": 10,
+                    "service_id": 1
+                },
+                {
+                    "room_type_id": 10,
+                    "service_id": 2
+                },
+                {
+                    "room_type_id": 10,
+                    "service_id": 3
+                },
+                {
+                    "room_type_id": 10,
+                    "service_id": 4
+                },
+            ],
+            "room_type_images": [
+                {
+                    "room_type_id": 1,
+                    "image_id": 13
+                },
+                {
+                    "room_type_id": 1,
+                    "image_id": 14
+                },
+                {
+                    "room_type_id": 1,
+                    "image_id": 15
+                },
+                {
+                    "room_type_id": 1,
+                    "image_id": 16
+                },
+                {
+                    "room_type_id": 2,
+                    "image_id": 13
+                },
+                {
+                    "room_type_id": 2,
+                    "image_id": 14
+                },
+                {
+                    "room_type_id": 2,
+                    "image_id": 15
+                },
+                {
+                    "room_type_id": 2,
+                    "image_id": 16
+                },
+                {
+                    "room_type_id": 3,
+                    "image_id": 13
+                },
+                {
+                    "room_type_id": 3,
+                    "image_id": 14
+                },
+                {
+                    "room_type_id": 3,
+                    "image_id": 15
+                },
+                {
+                    "room_type_id": 3,
+                    "image_id": 16
+                },
+                {
+                    "room_type_id": 4,
+                    "image_id": 21
+                },
+                {
+                    "room_type_id": 4,
+                    "image_id": 22
+                },
+                {
+                    "room_type_id": 4,
+                    "image_id": 23
+                },
+                {
+                    "room_type_id": 4,
+                    "image_id": 24
+                },
+                {
+                    "room_type_id": 5,
+                    "image_id": 21
+                },
+                {
+                    "room_type_id": 5,
+                    "image_id": 22
+                },
+                {
+                    "room_type_id": 5,
+                    "image_id": 23
+                },
+                {
+                    "room_type_id": 5,
+                    "image_id": 24
+                },
+                {
+                    "room_type_id": 6,
+                    "image_id": 17
+                },
+                {
+                    "room_type_id": 6,
+                    "image_id": 18
+                },
+                {
+                    "room_type_id": 6,
+                    "image_id": 19
+                },
+                {
+                    "room_type_id": 6,
+                    "image_id": 20
+                },
+                {
+                    "room_type_id": 7,
+                    "image_id": 17
+                },
+                {
+                    "room_type_id": 7,
+                    "image_id": 18
+                },
+                {
+                    "room_type_id": 7,
+                    "image_id": 19
+                },
+                {
+                    "room_type_id": 7,
+                    "image_id": 20
+                },
+                {
+                    "room_type_id": 8,
+                    "image_id": 17
+                },
+                {
+                    "room_type_id": 8,
+                    "image_id": 18
+                },
+                {
+                    "room_type_id": 8,
+                    "image_id": 19
+                },
+                {
+                    "room_type_id": 8,
+                    "image_id": 20
+                },
+                {
+                    "room_type_id": 9,
+                    "image_id": 25
+                },
+                {
+                    "room_type_id": 9,
+                    "image_id": 26
+                },
+                {
+                    "room_type_id": 9,
+                    "image_id": 27
+                },
+                {
+                    "room_type_id": 9,
+                    "image_id": 28
+                },
+                {
+                    "room_type_id": 10,
+                    "image_id": 25
+                },
+                {
+                    "room_type_id": 10,
+                    "image_id": 26
+                },
+                {
+                    "room_type_id": 10,
+                    "image_id": 27
+                },
+                {
+                    "room_type_id": 10,
+                    "image_id": 28
+                },
+            ],
+            "service_images": [
+                {
+                    "service_id": 1,
+                    "image_id": 8
+                },
+                {
+                    "service_id": 2,
+                    "image_id": 5
+                },
+                {
+                    "service_id": 3,
+                    "image_id": 7
+                },
+                {
+                    "service_id": 4,
+                    "image_id": 6
+                }
+            ]
         }
 
         for user in data['user']:
@@ -758,6 +1022,18 @@ if __name__ == '__main__':
         for image in data['image']:
             db.session.add(Image(**image))
 
+        # for hotel_images in data['hotel_images']:
+        #     db.session.execute(hotel_image.insert().values(**hotel_images))
+        #
+        # for room_services in data['room_services']:
+        #     db.session.add(room_service(**room_services))
+        #
+        # for room_type_images in data['room_type_images']:
+        #     db.session.add(room_type_image(**room_type_images))
+        #
+        # for service_images in data['service_images']:
+        #     db.session.add(service_image(**service_images))
+
         db.session.commit()
 
         c1 = Comment(content='good service', customer_id=3, room_type_id=1)
@@ -784,3 +1060,4 @@ if __name__ == '__main__':
         db.session.add(c9)
 
 
+        db.session.commit()
