@@ -6,7 +6,7 @@ import asyncio
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 
-from app import dao, login, app, db
+from app import dao, login, app, db, api
 from flask_login import login_user, logout_user, current_user, login_required
 
 from config import ROOM_TYPE_LABELS, BED_TYPE_LABELS, AREA_LABELS, BOOKING_STATUS_LABELS
@@ -365,6 +365,9 @@ def search_process():
 
 @app.route('/rooms', methods=['get', 'post'])
 def room_process():
+    # if current_user.is_authenticated:
+    #     customer_email = dao.get_customer_by_id(current_user.id).email
+    #     print(customer_email)
     is_staff = dao.is_staff(current_user)
     kw = request.args.get('kw')
     room_id = request.args.get('room_type')
@@ -615,7 +618,6 @@ async def pay():
 
     cart = session.get('cart', {})
     selected_rooms = {room_id: room for room_id, room in cart.items() if str(room_id) in selected_room_ids}
-
     if not selected_rooms:
         return jsonify({'status': 400, 'err_msg': 'Không có phòng hợp lệ được chọn.'})
 
@@ -627,6 +629,14 @@ async def pay():
         for room_id in selected_room_ids:
             cart.pop(room_id, None)
 
+
+        if current_user.is_authenticated:
+            customer_email = dao.get_customer_by_id(current_user.id).email
+            for room_id, details in selected_rooms.items():
+                api.send_email_success_for_booking(email_customer=customer_email,
+                                               room_name=details['room_name'],
+                                               room_type_name=details['room_type_name'],
+                                               checkin=details['checkin_date'])
         session['cart'] = cart
         return jsonify({'status': 200, 'msg': 'Thanh toán thành công!'})
 

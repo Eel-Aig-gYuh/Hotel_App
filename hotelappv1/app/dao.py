@@ -243,6 +243,9 @@ def load_rule(id):
     return Rule.query.filter(Rule.hotel_id.__eq__(id)).all()
 
 
+def get_customer_by_id(id):
+    return Customer.query.get(id)
+
 def get_rule_by_name(name):
     return Rule.query.filter(Rule.name.contains(name)).first()
 
