@@ -6,7 +6,7 @@ from flask import session
 print('mail is sending!')
 def send_email_success_for_booking(email_customer=None, room_name=None, room_type_name=None, checkin=None):
     email = 'giahuyle1030@gmail.com'
-    password = 'ybfy llae vaie mzjx'
+    password = ''
     email_sent = email_customer
     session = smtplib.SMTP('smtp.gmail.com', 587)
     # sẽ bật security để mở bảo mật gmail.
