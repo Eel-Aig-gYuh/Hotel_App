@@ -4,6 +4,16 @@
 The **Hotel Management System** is built with **Python Flask**, providing features for online room booking, payment processing, customer management, and business reporting.  
 The project aims to optimize hotel operations, enhance customer experience, and support staff/administrators in making data-driven decisions.  
 
+## System Architecture
+<p align="center">
+  <img src="https://github.com/Eel-Aig-gYuh/Hotel_App/blob/main/assert/archiSys.png"/>
+</p>
+
+---
+
+For a full system analysis, design diagrams, and use case specifications, please refer to the project report:
+[Hotel Management System Report (DOCX)](https://github.com/Eel-Aig-gYuh/Hotel_App/blob/main/assert/CNPM%20Nhom%2002%20Quan%20ly%20Thue%20Phong.docx)
+
 ---
 
 ## 📑 Table of Contents
@@ -11,7 +21,6 @@ The project aims to optimize hotel operations, enhance customer experience, and 
 - [Tech Stack](#-tech-stack)
 - [Installation & Run](#-installation--run)
 - [Database Schema](#-database-schema)
-- [Project Progress](#-project-progress)
 - [Team Members](#-team-members)
 
 ---
@@ -87,15 +96,6 @@ Main entities include:
 - `Service`, `Comment`, `Rule` – services, feedback, and hotel policies  
 
 (See detailed schema in the system design report.)  
-
----
-
-## ✅ Project Progress
-- Authentication (Register/Login): 100%  
-- Room booking: 80%  
-- Payment system: 90%  
-- Reporting & statistics: 100%  
-- Policy management: 100%  
 
 ---
 
